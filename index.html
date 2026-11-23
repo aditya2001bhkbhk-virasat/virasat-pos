@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VIRASAT (विरासत) — Restaurant Management & POS Billing</title>
-      <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#112920">
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
-      });
-    }
-  </script>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#112920">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js');
+        });
+      }
+    </script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter & Noto Sans Devanagari -->
@@ -57,8 +59,8 @@
     <style>
         /* Custom scrollbar for clean POS feel */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -84,11 +86,11 @@
                 left: 0;
                 top: 0;
                 width: 100%;
-                max-width: 380px;
+                max-width: 320px;
                 margin: 0 auto;
-                padding: 16px;
-                background: white;
-                color: black;
+                padding: 12px;
+                background: #ffffff;
+                color: #000000;
                 box-shadow: none !important;
                 border: none !important;
             }
@@ -98,729 +100,588 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased selection:bg-forest-700 selection:text-white">
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-forest-700 selection:text-white pb-20 md:pb-0">
 
-    <!-- Main App Container -->
-    <div id="app" class="flex flex-col lg:flex-row min-h-screen">
+    <!-- Toast Notification Banner -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-        <!-- Sidebar Navigation (Desktop) & Bottom Bar (Mobile) -->
-        <aside class="bg-forest-700 text-white lg:w-64 lg:min-h-screen flex lg:flex-col justify-between shrink-0 z-30 shadow-xl">
-            <!-- Brand Header -->
-            <div class="p-4 lg:p-6 flex items-center justify-between lg:block border-b border-forest-600/50">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gold-500 text-forest-900 flex items-center justify-center font-bold text-xl shadow-md">
-                        वि
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-lg lg:text-xl tracking-tight leading-none text-white" id="nav-brand-name">VIRASAT <span class="text-gold-400 font-normal">विरासत</span></h1>
-                        <p class="text-xs text-forest-200 mt-1" id="nav-brand-city">Ranchi, Jharkhand</p>
-                    </div>
+    <!-- Top Brand Header -->
+    <header class="bg-forest-800 text-white shadow-md sticky top-0 z-30 border-b border-forest-700">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 text-forest-900 font-bold text-xl flex items-center justify-center shadow-inner border border-gold-200">
+                    वि
                 </div>
-                <!-- Quick Mobile Shift Badge -->
-                <span class="lg:hidden text-xs bg-forest-800 text-gold-400 px-2.5 py-1 rounded-full border border-forest-600 font-medium">
-                    POS Live
-                </span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-bold text-lg tracking-wide text-white leading-none">VIRASAT <span class="text-gold-400 font-medium text-base">विरासत</span></h1>
+                        <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-forest-700 text-gold-400 rounded-full border border-gold-500/30">POS Live</span>
+                    </div>
+                    <p class="text-[11px] text-forest-200 mt-0.5">Ranchi, Jharkhand</p>
+                </div>
             </div>
 
-            <!-- Navigation Links -->
-            <nav class="fixed bottom-0 left-0 right-0 bg-forest-800 lg:static lg:bg-transparent border-t lg:border-t-0 border-forest-600 flex lg:flex-col justify-around lg:justify-start p-1.5 lg:p-4 gap-1 lg:gap-1.5 z-40">
-                <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-medium transition-all w-full text-forest-100 hover:bg-forest-600/60">
-                    <i class="ph ph-squares-four text-xl lg:text-lg"></i>
-                    <span>Dashboard</span>
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center gap-1 bg-forest-900/60 p-1 rounded-xl border border-forest-700">
+                <button onclick="switchTab('dashboard')" id="nav-desk-dashboard" class="nav-btn-desk px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 bg-forest-700 text-gold-400 shadow-sm">
+                    <i class="ph ph-squares-four text-base"></i> Dashboard
                 </button>
-                <button onclick="switchTab('tables')" data-tab="tables" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-medium transition-all w-full text-forest-100 hover:bg-forest-600/60">
-                    <i class="ph ph-armchair text-xl lg:text-lg"></i>
-                    <span>Tables & Cabins</span>
+                <button onclick="switchTab('tables')" id="nav-desk-tables" class="nav-btn-desk px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 text-forest-100 hover:text-white">
+                    <i class="ph ph-armchair text-base"></i> Tables & Cabins
                 </button>
-                <button onclick="switchTab('pos')" data-tab="pos" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-medium transition-all w-full text-forest-100 hover:bg-forest-600/60">
-                    <i class="ph ph-receipt text-xl lg:text-lg"></i>
-                    <span>POS Billing</span>
+                <button onclick="switchTab('pos')" id="nav-desk-pos" class="nav-btn-desk px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 text-forest-100 hover:text-white">
+                    <i class="ph ph-receipt text-base"></i> POS Billing
                 </button>
-                <button onclick="switchTab('menu')" data-tab="menu" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-medium transition-all w-full text-forest-100 hover:bg-forest-600/60">
-                    <i class="ph ph-fork-knife text-xl lg:text-lg"></i>
-                    <span>Menu & Stock</span>
+                <button onclick="switchTab('menu')" id="nav-desk-menu" class="nav-btn-desk px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 text-forest-100 hover:text-white">
+                    <i class="ph ph-fork-knife text-base"></i> Menu & Stock
                 </button>
-                <button onclick="switchTab('reports')" data-tab="reports" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-medium transition-all w-full text-forest-100 hover:bg-forest-600/60">
-                    <i class="ph ph-chart-line-up text-xl lg:text-lg"></i>
-                    <span>Sales & Settings</span>
+                <button onclick="switchTab('reports')" id="nav-desk-reports" class="nav-btn-desk px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 text-forest-100 hover:text-white">
+                    <i class="ph ph-chart-line-up text-base"></i> Sales
+                </button>
+                <button onclick="switchTab('settings')" id="nav-desk-settings" class="nav-btn-desk px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 text-forest-100 hover:text-white">
+                    <i class="ph ph-gear text-base"></i> Settings
                 </button>
             </nav>
 
-            <!-- Sidebar Footer Info (Desktop) -->
-            <div class="hidden lg:block p-4 m-4 rounded-xl bg-forest-800/80 border border-forest-600/50 text-xs text-forest-200">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="font-semibold text-white">System Status</span>
-                    <span class="flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online</span>
-                </div>
-                <p id="live-clock" class="text-forest-200/80 mt-1">--:-- --</p>
-            </div>
-        </aside>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 pb-24 lg:pb-8 overflow-x-hidden">
-            <!-- Top Context Header -->
-            <header class="bg-white border-b border-slate-200 px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20">
+            <!-- Live Clock & Quick Status -->
+            <div class="hidden sm:flex items-center gap-3 text-right">
                 <div>
-                    <h2 id="page-title" class="text-xl sm:text-2xl font-bold text-slate-900">Dashboard Overview</h2>
-                    <p id="page-subtitle" class="text-xs sm:text-sm text-slate-500">Welcome back! Here's today's live summary for VIRASAT.</p>
+                    <div id="live-clock" class="text-xs font-semibold text-gold-400">12:00 PM</div>
+                    <div id="live-date" class="text-[10px] text-forest-200">Ranchi POS</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 py-5">
+
+        <!-- ==================== 1. DASHBOARD VIEW ==================== -->
+        <section id="view-dashboard" class="view-section space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Dashboard Overview</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Welcome back! Here's today's live summary for VIRASAT.</p>
                 </div>
                 <div class="flex items-center gap-2.5">
-                    <button onclick="switchTab('tables')" class="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-forest-700 text-slate-700 hover:text-forest-700 font-medium text-sm flex items-center gap-2 transition bg-white shadow-sm">
+                    <button onclick="switchTab('tables')" class="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm transition" title="View Floor & Cabins">
                         <i class="ph ph-armchair text-lg"></i>
-                        <span class="hidden sm:inline">Floor View</span>
                     </button>
-                    <button onclick="startQuickTakeaway()" class="px-4 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-medium text-sm flex items-center gap-2 transition shadow-sm">
-                        <i class="ph ph-plus-circle text-lg text-gold-400"></i>
-                        <span>New Bill / Order</span>
+                    <button onclick="startNewOrder()" class="px-4 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-semibold text-sm shadow-sm transition flex items-center gap-2">
+                        <i class="ph ph-plus-circle text-lg text-gold-400"></i> New Bill / Order
                     </button>
                 </div>
-            </header>
+            </div>
 
-            <!-- Toast Notification Banner -->
-            <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today's Revenue</p>
+                        <h3 id="kpi-revenue" class="text-2xl font-extrabold text-slate-900 mt-1">₹0</h3>
+                        <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                            <i class="ph ph-trend-up"></i> Inclusive of GST
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-forest-50 text-forest-700 flex items-center justify-center text-xl font-bold">
+                        ₹
+                    </div>
+                </div>
 
-            <!-- ==================== 1. DASHBOARD VIEW ==================== -->
-            <section id="view-dashboard" class="view-section p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
-                <!-- KPI Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <!-- Total Revenue -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Today's Revenue</p>
-                            <h3 id="kpi-revenue" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1.5">₹0</h3>
-                            <p class="text-xs text-emerald-600 font-medium mt-2 flex items-center gap-1">
-                                <i class="ph ph-trend-up"></i> Inclusive of GST
-                            </p>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Completed Bills</p>
+                        <h3 id="kpi-bills" class="text-2xl font-extrabold text-slate-900 mt-1">0</h3>
+                        <p id="kpi-avg" class="text-xs text-slate-500 mt-1">Avg. Order: ₹0</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl">
+                        <i class="ph ph-check-circle"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Active Tables & Cabins</p>
+                        <h3 id="kpi-active-tables" class="text-2xl font-extrabold text-slate-900 mt-1">0 / 11</h3>
+                        <p id="kpi-running-total" class="text-xs text-amber-600 font-medium mt-1">Running KOT: ₹0</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl">
+                        <i class="ph ph-armchair"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Payment Split</p>
+                        <div class="flex items-center gap-2 mt-1.5 text-xs font-semibold">
+                            <span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700">UPI: <span id="kpi-upi">₹0</span></span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Cash: <span id="kpi-cash">₹0</span></span>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-forest-50 text-forest-700 flex items-center justify-center text-2xl">
-                            <i class="ph ph-currency-inr"></i>
+                        <p class="text-xs text-slate-500 mt-1">Card: <span id="kpi-card">₹0</span></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl">
+                        <i class="ph ph-qr-code"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Orders & Recent Bills Split -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Running Tables -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Running Tables & Cabins
+                        </h3>
+                        <button onclick="switchTab('tables')" class="text-xs font-semibold text-forest-700 hover:underline">Manage Floor →</button>
+                    </div>
+                    <div id="dash-running-list" class="p-5 space-y-3">
+                        <p class="text-sm text-slate-400 text-center py-6">No active tables right now. Tap "New Bill / Order" to start.</p>
+                    </div>
+                </div>
+
+                <!-- Recent Completed Bills -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i class="ph ph-clock-counter-clockwise text-forest-700"></i> Recent Settled Bills
+                        </h3>
+                        <button onclick="switchTab('reports')" class="text-xs font-semibold text-forest-700 hover:underline">All Sales →</button>
+                    </div>
+                    <div id="dash-recent-bills" class="p-5 space-y-3">
+                        <p class="text-sm text-slate-400 text-center py-6">No settled bills yet today.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. TABLES & CABINS VIEW ==================== -->
+        <section id="view-tables" class="view-section hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Floor Plan: Private Cabins & Dining Hall</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Tap any cabin, table, or takeaway counter to open billing or view running KOT.</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-medium">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Available</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Occupied</span>
+                </div>
+            </div>
+
+            <!-- Private Cabins Section -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-forest-700 mb-3 flex items-center gap-1.5">
+                    <i class="ph ph-door text-base"></i> Private Family & Couple Cabins (3 Cabins)
+                </h3>
+                <div id="grid-cabins" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+            </div>
+
+            <!-- Main Hall Tables Section -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-forest-700 mb-3 flex items-center gap-1.5">
+                    <i class="ph ph-armchair text-base"></i> Main Dining Hall (6 Tables)
+                </h3>
+                <div id="grid-hall" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"></div>
+            </div>
+
+            <!-- Takeaway & Delivery Section -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-forest-700 mb-3 flex items-center gap-1.5">
+                    <i class="ph ph-bag text-base"></i> Quick Counter & Takeaway
+                </h3>
+                <div id="grid-takeaway" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. POS BILLING VIEW ==================== -->
+        <section id="view-pos" class="view-section hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <!-- Left: Menu Selection (7 cols) -->
+                <div class="lg:col-span-7 space-y-4">
+                    <!-- Top Search & Table Bar -->
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1">
+                            <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="pos-search" oninput="renderPosMenu()" placeholder="Search Paneer, Biryani, Naan, Mocktail..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
                         </div>
+                        <select id="pos-table-select" onchange="changePosTable(this.value)" class="px-3.5 py-2 rounded-xl bg-forest-50 border border-forest-200 text-forest-900 font-semibold text-sm focus:outline-none">
+                        </select>
                     </div>
 
-                    <!-- Orders Completed -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Completed Bills</p>
-                            <h3 id="kpi-orders" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1.5">0</h3>
-                            <p id="kpi-avg-ticket" class="text-xs text-slate-500 mt-2">Avg. Order: ₹0</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl">
-                            <i class="ph ph-check-circle"></i>
-                        </div>
-                    </div>
+                    <!-- Category Filter Pills -->
+                    <div id="pos-categories" class="flex items-center gap-2 overflow-x-auto pb-1"></div>
 
-                    <!-- Active Tables / Cabins -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Tables & Cabins</p>
-                            <h3 id="kpi-active-tables" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1.5">0 / 11</h3>
-                            <p id="kpi-running-value" class="text-xs text-gold-600 font-medium mt-2">Running KOT: ₹0</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl">
-                            <i class="ph ph-users-three"></i>
-                        </div>
-                    </div>
+                    <!-- Menu Items Grid -->
+                    <div id="pos-menu-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[62vh] overflow-y-auto pr-1"></div>
+                </div>
 
-                    <!-- Low Stock Alert -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Inventory Alerts</p>
-                            <h3 id="kpi-low-stock" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1.5">0</h3>
-                            <button onclick="switchTab('menu')" class="text-xs text-forest-700 hover:underline font-medium mt-2 inline-flex items-center gap-1">
-                                Check Kitchen Stock <i class="ph ph-arrow-right"></i>
+                <!-- Right: Current Bill / KOT Cart (5 cols) -->
+                <div class="lg:col-span-5">
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm flex flex-col h-full sticky top-20">
+                        <!-- Cart Header -->
+                        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-forest-900 text-white rounded-t-2xl">
+                            <div>
+                                <span class="text-[10px] uppercase tracking-wider text-gold-400 font-semibold">Current Order</span>
+                                <h3 id="cart-table-title" class="font-bold text-base">Cabin 1</h3>
+                            </div>
+                            <button onclick="clearCurrentCart()" class="px-2.5 py-1 rounded-lg bg-forest-800 hover:bg-red-600/80 text-xs text-forest-200 hover:text-white transition flex items-center gap-1">
+                                <i class="ph ph-trash"></i> Clear
                             </button>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-2xl">
-                            <i class="ph ph-warning-circle"></i>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Payment Breakdown & Quick Floor Snapshot -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Payment Mode Breakdown -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                        <h3 class="font-bold text-slate-900 text-base mb-4 flex items-center gap-2">
-                            <i class="ph ph-wallet text-forest-700 text-xl"></i> Payment Mode Breakdown
-                        </h3>
-                        <div class="space-y-4">
-                            <!-- UPI -->
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="font-medium text-slate-700 flex items-center gap-1.5"><i class="ph ph-qr-code text-emerald-600"></i> UPI / QR</span>
-                                    <span id="pay-upi-amt" class="font-bold text-slate-900">₹0</span>
-                                </div>
-                                <div class="w-full bg-slate-100 rounded-full h-2.5">
-                                    <div id="pay-upi-bar" class="bg-emerald-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <!-- Card -->
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="font-medium text-slate-700 flex items-center gap-1.5"><i class="ph ph-credit-card text-blue-600"></i> Card (POS)</span>
-                                    <span id="pay-card-amt" class="font-bold text-slate-900">₹0</span>
-                                </div>
-                                <div class="w-full bg-slate-100 rounded-full h-2.5">
-                                    <div id="pay-card-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <!-- Cash -->
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="font-medium text-slate-700 flex items-center gap-1.5"><i class="ph ph-money text-amber-600"></i> Cash</span>
-                                    <span id="pay-cash-amt" class="font-bold text-slate-900">₹0</span>
-                                </div>
-                                <div class="w-full bg-slate-100 rounded-full h-2.5">
-                                    <div id="pay-cash-bar" class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Completed Bills -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-                                <i class="ph ph-clock-counter-clockwise text-forest-700 text-xl"></i> Recent Completed Bills
-                            </h3>
-                            <button onclick="switchTab('reports')" class="text-xs font-semibold text-forest-700 hover:underline">View All Ledger</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-slate-100 text-xs uppercase text-slate-400">
-                                        <th class="py-2.5 px-3">Bill #</th>
-                                        <th class="py-2.5 px-3">Table / Cabin</th>
-                                        <th class="py-2.5 px-3">Mode</th>
-                                        <th class="py-2.5 px-3 text-right">Amount</th>
-                                        <th class="py-2.5 px-3 text-right">Receipt</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dashboard-recent-bills" class="divide-y divide-slate-100 text-sm">
-                                    <!-- Populated dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ==================== 2. TABLES & CABINS VIEW ==================== -->
-            <section id="view-tables" class="view-section hidden p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
-                <!-- Status Legend & Takeaway Quick Action -->
-                <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm font-medium">
-                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Available</span>
-                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Occupied (Running KOT)</span>
-                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500"></span> Ready to Bill</span>
-                    </div>
-                    <button onclick="startQuickTakeaway()" class="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-forest-900 font-bold text-sm flex items-center gap-2 transition shadow-sm">
-                        <i class="ph ph-bag text-lg"></i> Takeaway / Counter Order
-                    </button>
-                </div>
-
-                <!-- Private Cabins Section -->
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="px-2.5 py-1 rounded-lg bg-gold-100 text-gold-600 font-bold text-xs uppercase tracking-wider border border-gold-200">VIP Private Dining</span>
-                        <h3 class="text-lg font-bold text-slate-900">Private Cabins (3)</h3>
-                    </div>
-                    <div id="cabins-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        <!-- Rendered via JS -->
-                    </div>
-                </div>
-
-                <!-- Main Hall Tables Section -->
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="px-2.5 py-1 rounded-lg bg-forest-100 text-forest-700 font-bold text-xs uppercase tracking-wider">Main Dining Hall</span>
-                        <h3 class="text-lg font-bold text-slate-900">Dining Tables (8)</h3>
-                    </div>
-                    <div id="tables-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                        <!-- Rendered via JS -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- ==================== 3. POS BILLING VIEW ==================== -->
-            <section id="view-pos" class="view-section hidden p-4 sm:p-6 max-w-7xl mx-auto">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    
-                    <!-- Left Panel: Menu Selection (7 cols) -->
-                    <div class="lg:col-span-7 space-y-4">
-                        <!-- Search & Veg Filter -->
-                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
-                            <div class="relative flex-1">
-                                <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                                <input type="text" id="pos-search" oninput="renderPosMenu()" placeholder="Search dishes (e.g., Paneer, Biryani, Naan)..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-forest-700 text-sm">
-                            </div>
-                            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
-                                <button onclick="setDietFilter('all')" id="diet-all" class="diet-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-sm">All</button>
-                                <button onclick="setDietFilter('veg')" id="diet-veg" class="diet-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 flex items-center gap-1">
-                                    <span class="w-2.5 h-2.5 rounded-sm border border-emerald-600 flex items-center justify-center"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span></span> Veg
-                                </button>
-                                <button onclick="setDietFilter('nonveg')" id="diet-nonveg" class="diet-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 flex items-center gap-1">
-                                    <span class="w-2.5 h-2.5 rounded-sm border border-rose-600 flex items-center justify-center"><span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span></span> Non-Veg
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Category Tabs -->
-                        <div id="pos-categories" class="flex items-center gap-2 overflow-x-auto pb-1">
-                            <!-- Rendered via JS -->
-                        </div>
-
-                        <!-- Menu Items Grid -->
-                        <div id="pos-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 max-h-[62vh] overflow-y-auto pr-1">
-                            <!-- Rendered via JS -->
-                        </div>
-                    </div>
-
-                    <!-- Right Panel: Current Bill / KOT (5 cols) -->
-                    <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-md flex flex-col sticky top-24">
-                        <!-- Order Header: Table Selector & Guest Info -->
-                        <div class="p-4 border-b border-slate-100 bg-forest-700 text-white rounded-t-2xl space-y-3">
-                            <div class="flex items-center justify-between gap-2">
-                                <label class="text-xs uppercase tracking-wider text-forest-200 font-semibold">Select Table / Cabin</label>
-                                <span id="pos-order-status-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-forest-800 text-gold-400 font-medium border border-forest-600">New Order</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                <select id="pos-table-select" onchange="onPosTableChange(this.value)" class="w-full px-3 py-2 rounded-xl bg-forest-800 border border-forest-600 text-white text-sm font-semibold focus:outline-none focus:border-gold-400">
-                                    <!-- Populated via JS -->
-                                </select>
-                                <input type="text" id="pos-customer-name" oninput="syncCustomerInfo()" placeholder="Guest Name / Phone (Opt.)" class="w-full px-3 py-2 rounded-xl bg-forest-800 border border-forest-600 text-white placeholder-forest-200/60 text-sm focus:outline-none focus:border-gold-400">
-                            </div>
+                        <!-- Customer Details (Optional) -->
+                        <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-100 grid grid-cols-2 gap-2">
+                            <input type="text" id="cart-cust-name" onchange="updateOrderCustomer()" placeholder="Guest Name (Optional)" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs focus:outline-none focus:border-forest-700">
+                            <input type="tel" id="cart-cust-phone" onchange="updateOrderCustomer()" placeholder="Phone / WhatsApp" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs focus:outline-none focus:border-forest-700">
                         </div>
 
                         <!-- Cart Items List -->
-                        <div id="pos-cart-items" class="p-4 space-y-2.5 min-h-[220px] max-h-[36vh] overflow-y-auto divide-y divide-slate-100">
-                            <!-- Rendered via JS -->
+                        <div id="cart-items-list" class="p-4 flex-1 overflow-y-auto max-h-[36vh] space-y-2.5">
+                            <div class="text-center py-10 text-slate-400">
+                                <i class="ph ph-shopping-cart text-3xl mb-1"></i>
+                                <p class="text-xs">Tap dishes on the left to add to bill</p>
+                            </div>
                         </div>
 
-                        <!-- Bill Adjustments & Summary -->
-                        <div class="p-4 bg-slate-50 border-t border-slate-200 rounded-b-2xl space-y-3">
-                            <!-- Discount & GST Controls -->
-                            <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-slate-500 font-medium">Discount:</span>
-                                    <input type="number" id="pos-discount-val" min="0" value="0" oninput="recalculateCart()" class="w-16 px-2 py-1 rounded-lg border border-slate-300 text-right font-semibold bg-white">
-                                    <select id="pos-discount-type" onchange="recalculateCart()" class="px-1.5 py-1 rounded-lg border border-slate-300 bg-white font-medium">
-                                        <option value="flat">₹</option>
-                                        <option value="percent">%</option>
-                                    </select>
-                                </div>
-                                <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                                    <input type="checkbox" id="pos-gst-toggle" checked onchange="recalculateCart()" class="rounded text-forest-700 focus:ring-forest-700 w-4 h-4">
-                                    <span class="font-medium text-slate-700">GST (5%)</span>
-                                </label>
+                        <!-- Totals & Discount Section -->
+                        <div class="p-4 bg-slate-50 border-t border-slate-200/80 space-y-2 text-xs">
+                            <div class="flex justify-between text-slate-600">
+                                <span>Subtotal</span>
+                                <span id="cart-subtotal" class="font-semibold">₹0.00</span>
                             </div>
-
-                            <!-- Totals Breakdown -->
-                            <div class="space-y-1 text-sm border-t border-slate-200 pt-2.5">
-                                <div class="flex justify-between text-slate-500">
-                                    <span>Subtotal</span>
-                                    <span id="bill-subtotal" class="font-medium text-slate-800">₹0.00</span>
-                                </div>
-                                <div id="bill-discount-row" class="hidden flex justify-between text-emerald-600">
-                                    <span>Discount</span>
-                                    <span id="bill-discount">-₹0.00</span>
-                                </div>
-                                <div id="bill-gst-row" class="flex justify-between text-slate-500 text-xs">
-                                    <span>CGST (2.5%) + SGST (2.5%)</span>
-                                    <span id="bill-gst">₹0.00</span>
-                                </div>
-                                <div class="flex justify-between items-center text-lg font-extrabold text-slate-900 pt-1.5 border-t border-slate-200">
-                                    <span>Grand Total</span>
-                                    <span id="bill-grand-total" class="text-forest-700">₹0</span>
-                                </div>
+                            <div class="flex items-center justify-between text-slate-600">
+                                <span class="flex items-center gap-1">Discount (%)
+                                    <input type="number" id="cart-discount-pct" min="0" max="100" value="0" oninput="recalculateCart()" class="w-12 px-1.5 py-0.5 rounded border border-slate-300 bg-white text-center font-semibold text-slate-800">
+                                </span>
+                                <span id="cart-discount-amt" class="text-emerald-600 font-semibold">-₹0.00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-600">
+                                <span id="cart-gst-label">GST (5%)</span>
+                                <span id="cart-gst-amt" class="font-semibold">₹0.00</span>
+                            </div>
+                            <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-base font-extrabold text-slate-900">
+                                <span>Grand Total</span>
+                                <span id="cart-grand-total" class="text-forest-700 text-lg">₹0.00</span>
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="grid grid-cols-2 gap-2.5 pt-1">
-                                <button onclick="saveKotOrder()" class="py-3 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 transition shadow-sm">
-                                    <i class="ph ph-cooking-pot text-lg"></i>
-                                    <span>Save / Send KOT</span>
+                            <div class="pt-3 grid grid-cols-2 gap-2.5">
+                                <button onclick="saveKotToast()" class="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
+                                    <i class="ph ph-cooking-pot text-base"></i> Save KOT
                                 </button>
-                                <button onclick="openPaymentModal()" class="py-3 px-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm flex items-center justify-center gap-1.5 transition shadow-md">
-                                    <i class="ph ph-currency-inr text-lg text-gold-400"></i>
-                                    <span>Settle & Pay</span>
-                                </button>
-                            </div>
-                            <div class="flex justify-between items-center pt-1">
-                                <button onclick="markTableReadyToBill()" class="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
-                                    <i class="ph ph-bell-ringing"></i> Mark Ready to Bill
-                                </button>
-                                <button onclick="clearCurrentOrder()" class="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1">
-                                    <i class="ph ph-trash"></i> Clear / Void Order
+                                <button onclick="openPaymentModal()" class="py-2.5 px-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
+                                    <i class="ph ph-currency-inr text-base text-gold-400"></i> Settle & Pay
                                 </button>
                             </div>
                         </div>
                     </div>
-
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- ==================== 4. MENU & INVENTORY VIEW ==================== -->
-            <section id="view-menu" class="view-section hidden p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
-                <!-- Sub-navigation for Menu vs Kitchen Stock -->
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div class="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                        <button onclick="switchSubMenuTab('items')" id="subtab-items" class="px-4 py-2 rounded-lg text-sm font-bold bg-forest-700 text-white transition">Menu Dishes</button>
-                        <button onclick="switchSubMenuTab('inventory')" id="subtab-inventory" class="px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:text-slate-900 transition">Kitchen Inventory</button>
-                    </div>
-                    <button onclick="openAddDishModal()" id="btn-add-dish" class="px-4 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-semibold text-sm flex items-center gap-2 shadow-sm">
-                        <i class="ph ph-plus-circle text-lg text-gold-400"></i> Add New Dish
-                    </button>
-                    <button onclick="openAddStockModal()" id="btn-add-stock" class="hidden px-4 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-semibold text-sm flex items-center gap-2 shadow-sm">
-                        <i class="ph ph-plus-circle text-lg text-gold-400"></i> Add Stock Item
-                    </button>
-                </div>
-
-                <!-- Menu Dishes Management Panel -->
-                <div id="panel-menu-items" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                        <input type="text" id="manage-menu-search" oninput="renderMenuManager()" placeholder="Filter dishes by name or category..." class="w-full sm:w-80 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
-                        <span id="menu-count-badge" class="text-xs font-semibold text-slate-500">0 items</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
-                                    <th class="py-3 px-4">Dish Name</th>
-                                    <th class="py-3 px-4">Category</th>
-                                    <th class="py-3 px-4">Type</th>
-                                    <th class="py-3 px-4">Price (₹)</th>
-                                    <th class="py-3 px-4">Availability</th>
-                                    <th class="py-3 px-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="manage-menu-tbody" class="divide-y divide-slate-100 text-sm">
-                                <!-- Rendered via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Kitchen Inventory Panel -->
-                <div id="panel-kitchen-inventory" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                        <div>
-                            <h3 class="font-bold text-slate-900">Raw Materials & Kitchen Stock</h3>
-                            <p class="text-xs text-slate-500">Track essential supplies and get alerts when stock runs low.</p>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
-                                    <th class="py-3 px-4">Ingredient / Item</th>
-                                    <th class="py-3 px-4">Current Stock</th>
-                                    <th class="py-3 px-4">Min. Threshold</th>
-                                    <th class="py-3 px-4">Status</th>
-                                    <th class="py-3 px-4 text-right">Quick Adjust</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventory-tbody" class="divide-y divide-slate-100 text-sm">
-                                <!-- Rendered via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ==================== 5. REPORTS & SETTINGS VIEW ==================== -->
-            <section id="view-reports" class="view-section hidden p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    <!-- Sales Ledger (2 Cols) -->
-                    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                        <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <h3 class="font-bold text-slate-900 text-lg">Daily Sales Ledger</h3>
-                                <p class="text-xs text-slate-500">All settled bills with GST & payment mode details</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <select id="report-mode-filter" onchange="renderSalesReport()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-slate-50">
-                                    <option value="ALL">All Modes</option>
-                                    <option value="UPI">UPI Only</option>
-                                    <option value="Card">Card Only</option>
-                                    <option value="Cash">Cash Only</option>
-                                </select>
-                                <button onclick="exportSalesCSV()" class="px-3.5 py-2 rounded-xl bg-forest-700 hover:bg-forest-800 text-white text-xs font-semibold flex items-center gap-1.5">
-                                    <i class="ph ph-download-simple text-base"></i> Export CSV
-                                </button>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto flex-1">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
-                                        <th class="py-3 px-4">Bill # & Time</th>
-                                        <th class="py-3 px-4">Table/Cabin</th>
-                                        <th class="py-3 px-4">Mode</th>
-                                        <th class="py-3 px-4 text-right">GST</th>
-                                        <th class="py-3 px-4 text-right">Total</th>
-                                        <th class="py-3 px-4 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="sales-report-tbody" class="divide-y divide-slate-100 text-sm">
-                                    <!-- Rendered via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Restaurant Settings (1 Col) -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
-                            <i class="ph ph-gear text-forest-700 text-xl"></i>
-                            <h3 class="font-bold text-slate-900 text-lg">Restaurant Settings</h3>
-                        </div>
-                        <form id="settings-form" onsubmit="saveSettings(event)" class="space-y-3.5">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Restaurant Name</label>
-                                <input type="text" id="set-name" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Address / Location</label>
-                                <input type="text" id="set-address" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Contact Phone</label>
-                                <input type="text" id="set-phone" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">GSTIN Number</label>
-                                <input type="text" id="set-gstin" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm uppercase focus:outline-none focus:border-forest-700">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Merchant UPI ID (for QR Code)</label>
-                                <input type="text" id="set-upi" required placeholder="merchant@upi" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
-                            </div>
-                            <button type="submit" class="w-full py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm transition shadow-sm">
-                                Save Settings
-                            </button>
-                        </form>
-
-                        <div class="pt-4 border-t border-slate-100">
-                            <p class="text-xs text-slate-500 mb-2">Need a fresh start or want to restore sample Ranchi menu & demo sales?</p>
-                            <button onclick="confirmResetDemoData()" class="w-full py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs transition">
-                                Reset Demo Data
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- ==================== PAYMENT ACCEPTANCE MODAL ==================== -->
-    <div id="payment-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 animate-fade-in">
-            <!-- Header -->
-            <div class="bg-forest-700 text-white px-6 py-4 flex items-center justify-between">
+        <!-- ==================== 4. MENU & INVENTORY VIEW ==================== -->
+        <section id="view-menu" class="view-section hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <p class="text-xs text-forest-200 uppercase tracking-wider font-semibold" id="pay-modal-table">Table 1</p>
-                    <h3 class="text-xl font-bold">Accept Payment</h3>
+                    <h2 class="text-xl font-bold text-slate-900">Menu & Stock Management</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Add new dishes, update prices, or toggle stock availability.</p>
                 </div>
-                <button onclick="closePaymentModal()" class="w-8 h-8 rounded-full bg-forest-800 hover:bg-forest-600 flex items-center justify-center text-white">
-                    <i class="ph ph-x text-lg"></i>
+                <button onclick="openAddDishModal()" class="px-4 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-semibold text-sm shadow-sm transition flex items-center gap-2 self-start">
+                    <i class="ph ph-plus-circle text-lg text-gold-400"></i> Add New Dish
                 </button>
             </div>
 
-            <!-- Amount Banner -->
-            <div class="bg-forest-50 px-6 py-4 border-b border-forest-100 flex items-center justify-between">
-                <span class="text-sm font-semibold text-forest-800">Payable Grand Total</span>
-                <span id="pay-modal-amount" class="text-2xl font-extrabold text-forest-700">₹0</span>
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <th class="py-3.5 px-4">Dish Name</th>
+                                <th class="py-3.5 px-4">Category</th>
+                                <th class="py-3.5 px-4">Type</th>
+                                <th class="py-3.5 px-4">Price</th>
+                                <th class="py-3.5 px-4">Stock</th>
+                                <th class="py-3.5 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menu-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 5. SALES REPORTS VIEW ==================== -->
+        <section id="view-reports" class="view-section hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Sales History & GST Ledger</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">View completed invoices, reprint receipts, or export CSV for accounting.</p>
+                </div>
+                <button onclick="exportSalesCsv()" class="px-4 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-semibold text-sm shadow-sm transition flex items-center gap-2 self-start">
+                    <i class="ph ph-download-simple text-lg text-gold-400"></i> Export CSV Report
+                </button>
             </div>
 
-            <!-- Payment Mode Tabs -->
-            <div class="p-6 space-y-5">
-                <div class="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl">
-                    <button onclick="selectPaymentMode('UPI')" id="tab-pay-UPI" class="pay-mode-btn py-2.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 bg-white text-forest-700 shadow-sm">
-                        <i class="ph ph-qr-code text-xl"></i>
-                        <span>UPI / QR</span>
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <th class="py-3.5 px-4">Invoice #</th>
+                                <th class="py-3.5 px-4">Date & Time</th>
+                                <th class="py-3.5 px-4">Table / Guest</th>
+                                <th class="py-3.5 px-4">Payment</th>
+                                <th class="py-3.5 px-4">Total</th>
+                                <th class="py-3.5 px-4 text-right">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 6. SETTINGS VIEW ==================== -->
+        <section id="view-settings" class="view-section hidden max-w-2xl mx-auto space-y-6">
+            <div>
+                <h2 class="text-xl font-bold text-slate-900">Restaurant & Billing Settings</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Configure your Ranchi restaurant details, UPI QR ID, and GST rate.</p>
+            </div>
+
+            <form onsubmit="saveSettings(event)" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Restaurant Name</label>
+                    <input type="text" id="set-name" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Address (Printed on Receipt)</label>
+                    <input type="text" id="set-address" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+                        <input type="text" id="set-phone" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">GSTIN (Optional)</label>
+                        <input type="text" id="set-gstin" placeholder="20AAAAA0000A1Z5" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Merchant UPI ID (For Live QR)</label>
+                        <input type="text" id="set-upi" required placeholder="yourname@okicici" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">GST Percentage (%)</label>
+                        <input type="number" id="set-gst-rate" min="0" max="28" step="0.5" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
+                    </div>
+                </div>
+                <div class="pt-2 flex items-center justify-between gap-3">
+                    <button type="button" onclick="resetDemoData()" class="px-4 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition">
+                        Reset Default Menu
                     </button>
-                    <button onclick="selectPaymentMode('Card')" id="tab-pay-Card" class="pay-mode-btn py-2.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 text-slate-600">
-                        <i class="ph ph-credit-card text-xl"></i>
-                        <span>Card</span>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm shadow-sm transition">
+                        Save Settings
                     </button>
-                    <button onclick="selectPaymentMode('Cash')" id="tab-pay-Cash" class="pay-mode-btn py-2.5 rounded-xl font-bold text-sm flex flex-col items-center gap-1 text-slate-600">
-                        <i class="ph ph-money text-xl"></i>
-                        <span>Cash</span>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-30 flex items-center justify-around py-2 px-1 shadow-lg">
+        <button onclick="switchTab('dashboard')" id="nav-mob-dashboard" class="nav-btn-mob flex flex-col items-center gap-0.5 text-forest-700 font-bold text-[10px] px-2 py-1">
+            <i class="ph ph-squares-four text-xl"></i> Dashboard
+        </button>
+        <button onclick="switchTab('tables')" id="nav-mob-tables" class="nav-btn-mob flex flex-col items-center gap-0.5 text-slate-500 font-medium text-[10px] px-2 py-1">
+            <i class="ph ph-armchair text-xl"></i> Tables
+        </button>
+        <button onclick="switchTab('pos')" id="nav-mob-pos" class="nav-btn-mob flex flex-col items-center gap-0.5 text-slate-500 font-medium text-[10px] px-2 py-1">
+            <i class="ph ph-receipt text-xl"></i> POS Bill
+        </button>
+        <button onclick="switchTab('menu')" id="nav-mob-menu" class="nav-btn-mob flex flex-col items-center gap-0.5 text-slate-500 font-medium text-[10px] px-2 py-1">
+            <i class="ph ph-fork-knife text-xl"></i> Menu
+        </button>
+        <button onclick="switchTab('settings')" id="nav-mob-settings" class="nav-btn-mob flex flex-col items-center gap-0.5 text-slate-500 font-medium text-[10px] px-2 py-1">
+            <i class="ph ph-gear text-xl"></i> Settings
+        </button>
+    </nav>
+
+    <!-- ==================== MODAL: PAYMENT ACCEPTANCE ==================== -->
+    <div id="payment-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-forest-900 text-white px-5 py-4 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] uppercase tracking-wider text-gold-400 font-semibold">Settle Bill</span>
+                    <h3 id="pay-modal-table" class="font-bold text-base">Cabin 1</h3>
+                </div>
+                <button onclick="closePaymentModal()" class="text-forest-200 hover:text-white text-xl">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <div class="bg-forest-50 border border-forest-100 rounded-xl p-3.5 text-center">
+                    <p class="text-xs text-forest-700 font-medium">Total Payable Amount</p>
+                    <p id="pay-modal-amount" class="text-3xl font-extrabold text-forest-900 mt-0.5">₹0.00</p>
+                </div>
+
+                <!-- Payment Mode Tabs -->
+                <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl">
+                    <button type="button" id="tab-pay-UPI" onclick="selectPaymentMode('UPI')" class="py-2 rounded-lg text-xs font-bold transition bg-white text-forest-700 shadow-sm">
+                        <i class="ph ph-qr-code"></i> UPI QR
+                    </button>
+                    <button type="button" id="tab-pay-Cash" onclick="selectPaymentMode('Cash')" class="py-2 rounded-lg text-xs font-bold transition text-slate-600">
+                        <i class="ph ph-money"></i> Cash
+                    </button>
+                    <button type="button" id="tab-pay-Card" onclick="selectPaymentMode('Card')" class="py-2 rounded-lg text-xs font-bold transition text-slate-600">
+                        <i class="ph ph-credit-card"></i> Card
                     </button>
                 </div>
 
-                <!-- 1. UPI Panel -->
-                <div id="panel-pay-UPI" class="space-y-4 text-center">
-                    <p class="text-xs text-slate-500">Scan using GPay, PhonePe, Paytm, or any BHIM UPI app</p>
-                    <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-forest-200 inline-flex flex-col items-center justify-center mx-auto shadow-inner">
-                        <div id="upi-qr-container" class="w-44 h-44 flex items-center justify-center"></div>
-                        <p id="upi-id-display" class="text-xs font-mono font-semibold text-slate-700 mt-2">virasat.ranchi@okicici</p>
+                <!-- UPI Panel -->
+                <div id="panel-pay-UPI" class="space-y-3 text-center">
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 inline-block mx-auto shadow-xs">
+                        <div id="upi-qr-container" class="flex items-center justify-center"></div>
                     </div>
-                    <button onclick="completePayment('UPI')" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
-                        <i class="ph ph-check-circle text-xl"></i> Verify UPI & Complete Bill
+                    <p class="text-xs text-slate-500">Scan with GPay, PhonePe, Paytm or BHIM</p>
+                    <button onclick="completePayment('UPI')" class="w-full py-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm shadow-sm transition">
+                        Confirm UPI Received & Print Bill
                     </button>
                 </div>
 
-                <!-- 2. Card Panel -->
-                <div id="panel-pay-Card" class="hidden space-y-4">
+                <!-- Cash Panel -->
+                <div id="panel-pay-Cash" class="hidden space-y-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Card Network</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="card-network" value="Visa" checked class="peer sr-only">
-                                <div class="py-2 text-center rounded-xl border border-slate-200 peer-checked:border-forest-700 peer-checked:bg-forest-50 font-semibold text-xs">Visa</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="card-network" value="Mastercard" class="peer sr-only">
-                                <div class="py-2 text-center rounded-xl border border-slate-200 peer-checked:border-forest-700 peer-checked:bg-forest-50 font-semibold text-xs">Mastercard</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="card-network" value="RuPay" class="peer sr-only">
-                                <div class="py-2 text-center rounded-xl border border-slate-200 peer-checked:border-forest-700 peer-checked:bg-forest-50 font-semibold text-xs">RuPay</div>
-                            </label>
-                        </div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Cash Tendered by Guest (₹)</label>
+                        <input type="number" id="cash-tendered-input" oninput="calculateCashChange()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-base font-bold focus:outline-none focus:border-forest-700">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Card Last 4 Digits / Auth Code (Optional)</label>
-                        <input type="text" id="card-last4" maxlength="4" placeholder="e.g. 4821" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:border-forest-700">
+                    <div class="flex justify-between items-center p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold">
+                        <span class="text-amber-900">Change to Return:</span>
+                        <span id="cash-change-display" class="text-base text-amber-700">₹0.00</span>
                     </div>
-                    <button onclick="completePayment('Card')" class="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
-                        <i class="ph ph-credit-card text-xl"></i> Confirm POS Card Swipe
+                    <button onclick="completePayment('Cash')" class="w-full py-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm shadow-sm transition">
+                        Confirm Cash Received & Print Bill
                     </button>
                 </div>
 
-                <!-- 3. Cash Panel -->
-                <div id="panel-pay-Cash" class="hidden space-y-4">
+                <!-- Card Panel -->
+                <div id="panel-pay-Card" class="hidden space-y-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Quick Cash Received (₹)</label>
-                        <div class="grid grid-cols-5 gap-1.5 mb-2.5">
-                            <button type="button" onclick="setCashTendered('exact')" class="py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800">Exact</button>
-                            <button type="button" onclick="setCashTendered(100)" class="py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800">₹100</button>
-                            <button type="button" onclick="setCashTendered(200)" class="py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800">₹200</button>
-                            <button type="button" onclick="setCashTendered(500)" class="py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800">₹500</button>
-                            <button type="button" onclick="setCashTendered(2000)" class="py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800">₹2000</button>
-                        </div>
-                        <input type="number" id="cash-tendered-input" oninput="calculateCashChange()" placeholder="Enter cash given by guest..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-base font-bold focus:outline-none focus:border-forest-700">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Card Last 4 Digits / Approval Ref (Optional)</label>
+                        <input type="text" id="card-ref-input" placeholder="e.g. 4829" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
                     </div>
-                    <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between">
-                        <span class="text-sm font-semibold text-amber-900">Change to Return:</span>
-                        <span id="cash-change-display" class="text-xl font-extrabold text-amber-700">₹0</span>
-                    </div>
-                    <button onclick="completePayment('Cash')" class="w-full py-3.5 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
-                        <i class="ph ph-money text-xl text-gold-400"></i> Settle Cash Payment
+                    <button onclick="completePayment('Card')" class="w-full py-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-sm shadow-sm transition">
+                        Confirm Card Swipe & Print Bill
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== GST INVOICE RECEIPT MODAL ==================== -->
-    <div id="receipt-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]">
-            <div class="p-4 border-b border-slate-100 flex items-center justify-between no-print">
-                <span class="font-bold text-slate-800 text-sm flex items-center gap-1.5"><i class="ph ph-check-circle text-emerald-600 text-lg"></i> Tax Invoice Ready</span>
-                <button onclick="closeReceiptModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500">
-                    <i class="ph ph-x text-lg"></i>
+    <!-- ==================== MODAL: THERMAL GST RECEIPT ==================== -->
+    <div id="receipt-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+            <div class="px-4 py-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between no-print">
+                <span class="text-xs font-bold text-slate-700">Tax Invoice Preview</span>
+                <button onclick="closeReceiptModal()" class="text-slate-500 hover:text-slate-800 text-lg">
+                    <i class="ph ph-x"></i>
                 </button>
             </div>
 
-            <!-- Printable Receipt Content -->
-            <div id="printable-receipt" class="p-6 overflow-y-auto font-mono text-xs text-slate-800 space-y-3 bg-white">
-                <div class="text-center border-b border-dashed border-slate-300 pb-3">
-                    <h2 id="rec-rest-name" class="text-lg font-bold tracking-tight uppercase">VIRASAT — विरासत</h2>
-                    <p id="rec-rest-address" class="text-[11px] text-slate-600 mt-0.5">Main Road, Ranchi, Jharkhand</p>
-                    <p id="rec-rest-phone" class="text-[11px] text-slate-600">Ph: +91 98351 00000</p>
-                    <p id="rec-rest-gstin" class="text-[11px] font-semibold mt-0.5">GSTIN: 20AABCV1234F1Z5</p>
+            <!-- Printable Receipt Area -->
+            <div id="printable-receipt" class="p-5 overflow-y-auto font-mono text-xs text-slate-900 space-y-3">
+                <div class="text-center border-b border-dashed border-slate-400 pb-3">
+                    <h2 id="rec-rest-name" class="text-base font-extrabold tracking-wide">VIRASAT (विरासत)</h2>
+                    <p id="rec-rest-address" class="text-[11px] text-slate-600 mt-0.5">Ranchi, Jharkhand</p>
+                    <p id="rec-rest-phone" class="text-[11px] text-slate-600">Ph: +91 98765 43210</p>
+                    <p id="rec-rest-gstin" class="text-[11px] font-semibold mt-0.5"></p>
                 </div>
 
-                <div class="flex justify-between text-[11px] border-b border-dashed border-slate-300 pb-2">
+                <div class="flex justify-between text-[11px] border-b border-dashed border-slate-400 pb-2">
                     <div>
-                        <p>Bill No: <strong id="rec-bill-no">#INV-101</strong></p>
-                        <p>Table: <strong id="rec-table">Table 1</strong></p>
-                        <p id="rec-guest-wrap" class="hidden">Guest: <span id="rec-guest"></span></p>
+                        <p>Bill: <span id="rec-inv-no" class="font-bold">INV-1001</span></p>
+                        <p>Table: <span id="rec-table" class="font-bold">Cabin 1</span></p>
                     </div>
                     <div class="text-right">
                         <p id="rec-date">23/11/2026</p>
-                        <p id="rec-time">12:30 PM</p>
-                        <p>Paid via: <strong id="rec-mode">UPI</strong></p>
+                        <p>Mode: <span id="rec-pay-mode" class="font-bold">UPI</span></p>
                     </div>
                 </div>
 
+                <div id="rec-guest-row" class="hidden text-[11px] border-b border-dashed border-slate-400 pb-2">
+                    Guest: <span id="rec-guest-name" class="font-bold"></span>
+                </div>
+
                 <!-- Items -->
-                <table class="w-full text-left text-[11px]">
+                <table class="w-full text-[11px]">
                     <thead>
-                        <tr class="border-b border-slate-300">
+                        <tr class="border-b border-slate-300 text-left">
                             <th class="py-1">Item</th>
                             <th class="py-1 text-center">Qty</th>
                             <th class="py-1 text-right">Amt</th>
                         </tr>
                     </thead>
-                    <tbody id="rec-items-body" class="divide-y divide-dotted divide-slate-200">
-                    </tbody>
+                    <tbody id="rec-items-body" class="divide-y divide-dotted divide-slate-200"></tbody>
                 </table>
 
                 <!-- Totals -->
-                <div class="border-t border-dashed border-slate-300 pt-2 space-y-1 text-[11px]">
+                <div class="border-t border-dashed border-slate-400 pt-2 space-y-1 text-[11px]">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
                         <span id="rec-subtotal">₹0.00</span>
                     </div>
-                    <div id="rec-discount-line" class="hidden flex justify-between">
+                    <div id="rec-disc-row" class="hidden flex justify-between">
                         <span>Discount</span>
                         <span id="rec-discount">-₹0.00</span>
                     </div>
-                    <div id="rec-cgst-line" class="flex justify-between">
-                        <span>CGST (2.5%)</span>
-                        <span id="rec-cgst">₹0.00</span>
+                    <div class="flex justify-between">
+                        <span id="rec-gst-label">GST (5%)</span>
+                        <span id="rec-gst">₹0.00</span>
                     </div>
-                    <div id="rec-sgst-line" class="flex justify-between">
-                        <span>SGST (2.5%)</span>
-                        <span id="rec-sgst">₹0.00</span>
-                    </div>
-                    <div class="flex justify-between text-sm font-bold border-t border-slate-800 pt-1.5 mt-1">
+                    <div class="flex justify-between text-sm font-extrabold border-t border-slate-400 pt-1.5 mt-1">
                         <span>GRAND TOTAL</span>
-                        <span id="rec-grand-total">₹0</span>
+                        <span id="rec-total">₹0.00</span>
                     </div>
                 </div>
 
-                <div class="text-center border-t border-dashed border-slate-300 pt-3 text-[11px] text-slate-600">
-                    <p class="font-semibold">Thank you for dining at VIRASAT!</p>
-                    <p>Visit Again • शुभ भोजन</p>
+                <div class="text-center border-t border-dashed border-slate-400 pt-3 text-[10px] text-slate-600">
+                    <p class="font-bold">Thank you for dining at VIRASAT!</p>
+                    <p>Heritage on Plate • Visit Again</p>
                 </div>
             </div>
 
-            <!-- Modal Footer Actions -->
-            <div class="p-4 bg-slate-50 border-t border-slate-200 grid grid-cols-2 gap-2.5 no-print">
+            <div class="p-3 bg-slate-50 border-t border-slate-200 grid grid-cols-2 gap-2 no-print">
                 <button onclick="window.print()" class="py-2.5 px-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs flex items-center justify-center gap-1.5">
-                    <i class="ph ph-printer text-base"></i> Print Bill
+                    <i class="ph ph-printer text-base"></i> Print Receipt
                 </button>
-                <button onclick="copyReceiptSummary()" class="py-2.5 px-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5">
-                    <i class="ph ph-copy text-base"></i> Copy Text
+                <button onclick="closeReceiptModal()" class="py-2.5 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs">
+                    Done
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== ADD / EDIT DISH MODAL ==================== -->
-    <div id="dish-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 id="dish-modal-title" class="text-lg font-bold text-slate-900">Add New Menu Dish</h3>
-                <button onclick="closeDishModal()" class="text-slate-400 hover:text-slate-700"><i class="ph ph-x text-xl"></i></button>
+    <!-- ==================== MODAL: ADD NEW DISH ==================== -->
+    <div id="add-dish-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-forest-900 text-white px-5 py-4 flex items-center justify-between">
+                <h3 class="font-bold text-base">Add New Menu Item</h3>
+                <button onclick="closeAddDishModal()" class="text-forest-200 hover:text-white text-xl">
+                    <i class="ph ph-x"></i>
+                </button>
             </div>
-            <form id="dish-form" onsubmit="saveDishForm(event)" class="space-y-3.5">
-                <input type="hidden" id="dish-id">
+            <form onsubmit="saveNewDish(event)" class="p-5 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Dish Name</label>
-                    <input type="text" id="dish-name" required placeholder="e.g., Paneer Handi" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Dish Name</label>
+                    <input type="text" id="dish-name" required placeholder="e.g. Virasat Special Handi Paneer" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
-                        <select id="dish-category" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-forest-700">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                        <select id="dish-category" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:outline-none focus:border-forest-700">
                             <option value="Starters">Starters</option>
                             <option value="Main Course">Main Course</option>
                             <option value="Breads & Rice">Breads & Rice</option>
@@ -829,775 +690,519 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Price (₹)</label>
-                        <input type="number" id="dish-price" required min="1" placeholder="240" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-forest-700">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Dietary Type</label>
+                        <select id="dish-veg" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:outline-none focus:border-forest-700">
+                            <option value="true">Pure Veg (Green)</option>
+                            <option value="false">Non-Veg (Red)</option>
+                        </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Dietary Type</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="dish-veg" value="true" checked class="peer sr-only">
-                            <div class="py-2 text-center rounded-xl border border-slate-200 peer-checked:border-emerald-600 peer-checked:bg-emerald-50 text-emerald-700 font-semibold text-xs">Pure Veg</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="dish-veg" value="false" class="peer sr-only">
-                            <div class="py-2 text-center rounded-xl border border-slate-200 peer-checked:border-rose-600 peer-checked:bg-rose-50 text-rose-700 font-semibold text-xs">Non-Veg</div>
-                        </label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Price (₹)</label>
+                        <input type="number" id="dish-price" min="1" required placeholder="240" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Initial Stock Qty</label>
+                        <input type="number" id="dish-stock" min="0" value="50" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-forest-700">
                     </div>
                 </div>
                 <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeDishModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-forest-700 hover:bg-forest-800 text-white text-sm font-bold">Save Dish</button>
+                    <button type="button" onclick="closeAddDishModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-forest-700 text-white text-xs font-bold">Add to Menu</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ==================== ADD STOCK MODAL ==================== -->
-    <div id="stock-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="text-lg font-bold text-slate-900">Add Kitchen Stock Item</h3>
-                <button onclick="closeStockModal()" class="text-slate-400 hover:text-slate-700"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <form onsubmit="saveStockForm(event)" class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Ingredient / Supply Name</label>
-                    <input type="text" id="stock-name" required placeholder="e.g., Fresh Paneer (kg)" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm">
-                </div>
-                <div class="grid grid-cols-3 gap-2.5">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
-                        <input type="number" id="stock-qty" required min="0" step="0.5" placeholder="10" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Unit</label>
-                        <input type="text" id="stock-unit" required placeholder="kg / L / pcs" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Alert Below</label>
-                        <input type="number" id="stock-min" required min="1" placeholder="3" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
-                    </div>
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeStockModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-forest-700 hover:bg-forest-800 text-white text-sm font-bold">Add Item</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ==================== CUSTOM CONFIRM MODAL (No window.confirm) ==================== -->
-    <div id="confirm-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
-            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-2xl">
-                <i class="ph ph-warning"></i>
-            </div>
-            <h3 id="confirm-title" class="text-lg font-bold text-slate-900">Are you sure?</h3>
-            <p id="confirm-message" class="text-xs text-slate-500">This action cannot be undone.</p>
-            <div class="grid grid-cols-2 gap-3 pt-2">
-                <button onclick="closeConfirmModal()" class="py-2.5 rounded-xl border border-slate-200 font-semibold text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
-                <button id="confirm-yes-btn" class="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 font-bold text-sm text-white">Yes, Proceed</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== APPLICATION LOGIC ==================== -->
+    <!-- ==================== APPLICATION JAVASCRIPT ==================== -->
     <script>
-        // Storage Key
-        const STORAGE_KEY = 'virasat_ranchi_pos_v1';
+        const STORAGE_KEY = 'virasat_pos_state_v1';
 
-        // Default Pre-populated Data tailored for VIRASAT, Ranchi
-        const DEFAULT_DATA = {
-            settings: {
-                name: 'VIRASAT — विरासत',
-                address: 'Circular Road, Lalpur, Ranchi, Jharkhand',
-                phone: '+91 98351 44210',
-                gstin: '20AABCV8921K1Z4',
-                upiId: 'virasat.ranchi@okicici'
-            },
-            tables: [
-                { id: 'cabin-1', name: 'Cabin 1', type: 'cabin', capacity: 6, status: 'occupied' },
-                { id: 'cabin-2', name: 'Cabin 2', type: 'cabin', capacity: 8, status: 'available' },
-                { id: 'cabin-3', name: 'Cabin 3', type: 'cabin', capacity: 6, status: 'available' },
-                { id: 'table-1', name: 'Table 1', type: 'table', capacity: 4, status: 'occupied' },
-                { id: 'table-2', name: 'Table 2', type: 'table', capacity: 4, status: 'available' },
-                { id: 'table-3', name: 'Table 3', type: 'table', capacity: 2, status: 'billing' },
-                { id: 'table-4', name: 'Table 4', type: 'table', capacity: 4, status: 'available' },
-                { id: 'table-5', name: 'Table 5', type: 'table', capacity: 6, status: 'available' },
-                { id: 'table-6', name: 'Table 6', type: 'table', capacity: 4, status: 'available' },
-                { id: 'table-7', name: 'Table 7', type: 'table', capacity: 2, status: 'available' },
-                { id: 'table-8', name: 'Table 8', type: 'table', capacity: 4, status: 'available' },
-                { id: 'takeaway', name: 'Takeaway / Counter', type: 'takeaway', capacity: 0, status: 'available' }
-            ],
-            menu: [
-                // Starters
-                { id: 'm1', name: 'Paneer Tikka Angara', category: 'Starters', price: 240, isVeg: true, available: true },
-                { id: 'm2', name: 'Crispy Chilli Baby Corn', category: 'Starters', price: 210, isVeg: true, available: true },
-                { id: 'm3', name: 'Hara Bhara Kebab (8 pcs)', category: 'Starters', price: 190, isVeg: true, available: true },
-                { id: 'm4', name: 'Tandoori Chicken (Half)', category: 'Starters', price: 290, isVeg: false, available: true },
-                { id: 'm5', name: 'Chicken Chilli Dry', category: 'Starters', price: 260, isVeg: false, available: true },
-                { id: 'm6', name: 'Mutton Seekh Kebab', category: 'Starters', price: 340, isVeg: false, available: true },
-                // Main Course
-                { id: 'm7', name: 'Virasat Special Paneer Lababdar', category: 'Main Course', price: 280, isVeg: true, available: true },
-                { id: 'm8', name: 'Dal Tadka Yellow', category: 'Main Course', price: 170, isVeg: true, available: true },
-                { id: 'm9', name: 'Dal Makhani', category: 'Main Course', price: 220, isVeg: true, available: true },
-                { id: 'm10', name: 'Kadhai Mushroom Masala', category: 'Main Course', price: 250, isVeg: true, available: true },
-                { id: 'm11', name: 'Butter Chicken (Boneless)', category: 'Main Course', price: 340, isVeg: false, available: true },
-                { id: 'm12', name: 'Desi Mutton Rogan Josh', category: 'Main Course', price: 390, isVeg: false, available: true },
-                { id: 'm13', name: 'Chicken Dehati Handi', category: 'Main Course', price: 360, isVeg: false, available: true },
-                // Breads & Rice
-                { id: 'm14', name: 'Butter Naan', category: 'Breads & Rice', price: 55, isVeg: true, available: true },
-                { id: 'm15', name: 'Garlic Naan', category: 'Breads & Rice', price: 70, isVeg: true, available: true },
-                { id: 'm16', name: 'Tandoori Roti', category: 'Breads & Rice', price: 30, isVeg: true, available: true },
-                { id: 'm17', name: 'Laccha Paratha', category: 'Breads & Rice', price: 60, isVeg: true, available: true },
-                { id: 'm18', name: 'Jeera Basmati Rice', category: 'Breads & Rice', price: 140, isVeg: true, available: true },
-                { id: 'm19', name: 'Hyderabadi Chicken Dum Biryani', category: 'Breads & Rice', price: 290, isVeg: false, available: true },
-                { id: 'm20', name: 'Subz Veg Dum Biryani', category: 'Breads & Rice', price: 230, isVeg: true, available: true },
-                // Beverages
-                { id: 'm21', name: 'Fresh Lime Soda (Sweet/Salt)', category: 'Beverages', price: 80, isVeg: true, available: true },
-                { id: 'm22', name: 'Kesar Mango Lassi', category: 'Beverages', price: 110, isVeg: true, available: true },
-                { id: 'm23', name: 'Masala Cold Drink', category: 'Beverages', price: 75, isVeg: true, available: true },
-                { id: 'm24', name: 'Mineral Water (1L)', category: 'Beverages', price: 30, isVeg: true, available: true },
-                // Desserts
-                { id: 'm25', name: 'Hot Gulab Jamun (2 pcs)', category: 'Desserts', price: 90, isVeg: true, available: true },
-                { id: 'm26', name: 'Shahi Rasmalai', category: 'Desserts', price: 120, isVeg: true, available: true }
-            ],
-            activeOrders: {
-                'cabin-1': {
-                    tableId: 'cabin-1',
-                    customer: 'Mr. Rajeev Sinha',
-                    items: [
-                        { id: 'm1', name: 'Paneer Tikka Angara', price: 240, qty: 1, isVeg: true },
-                        { id: 'm11', name: 'Butter Chicken (Boneless)', price: 340, qty: 1, isVeg: false },
-                        { id: 'm15', name: 'Garlic Naan', price: 70, qty: 3, isVeg: true }
-                    ],
-                    discountVal: 0,
-                    discountType: 'flat',
-                    gstEnabled: true
-                },
-                'table-1': {
-                    tableId: 'table-1',
-                    customer: 'Walk-in Family',
-                    items: [
-                        { id: 'm8', name: 'Dal Tadka Yellow', price: 170, qty: 1, isVeg: true },
-                        { id: 'm7', name: 'Virasat Special Paneer Lababdar', price: 280, qty: 1, isVeg: true },
-                        { id: 'm16', name: 'Tandoori Roti', price: 30, qty: 4, isVeg: true }
-                    ],
-                    discountVal: 0,
-                    discountType: 'flat',
-                    gstEnabled: true
-                },
-                'table-3': {
-                    tableId: 'table-3',
-                    customer: 'Ankit Sharma',
-                    items: [
-                        { id: 'm19', name: 'Hyderabadi Chicken Dum Biryani', price: 290, qty: 2, isVeg: false },
-                        { id: 'm21', name: 'Fresh Lime Soda (Sweet/Salt)', price: 80, qty: 2, isVeg: true }
-                    ],
-                    discountVal: 0,
-                    discountType: 'flat',
-                    gstEnabled: true
-                }
-            },
-            completedBills: [
-                {
-                    billNo: 'INV-1001',
-                    tableName: 'Cabin 2',
-                    customer: 'Dr. S. K. Verma',
-                    items: [
-                        { name: 'Virasat Special Paneer Lababdar', qty: 2, price: 280 },
-                        { name: 'Dal Makhani', qty: 1, price: 220 },
-                        { name: 'Butter Naan', qty: 6, price: 55 }
-                    ],
-                    subtotal: 1110,
-                    discount: 0,
-                    gst: 55.5,
-                    total: 1166,
-                    paymentMode: 'UPI',
-                    timestamp: new Date(Date.now() - 7200000).toISOString()
-                },
-                {
-                    billNo: 'INV-1002',
-                    tableName: 'Table 4',
-                    customer: '',
-                    items: [
-                        { name: 'Chicken Chilli Dry', qty: 1, price: 260 },
-                        { name: 'Jeera Basmati Rice', qty: 1, price: 140 }
-                    ],
-                    subtotal: 400,
-                    discount: 0,
-                    gst: 20,
-                    total: 420,
-                    paymentMode: 'Cash',
-                    timestamp: new Date(Date.now() - 3600000).toISOString()
-                },
-                {
-                    billNo: 'INV-1003',
-                    tableName: 'Table 2',
-                    customer: 'Priya Kumari',
-                    items: [
-                        { name: 'Paneer Tikka Angara', qty: 1, price: 240 },
-                        { name: 'Subz Veg Dum Biryani', qty: 2, price: 230 },
-                        { name: 'Kesar Mango Lassi', qty: 2, price: 110 }
-                    ],
-                    subtotal: 920,
-                    discount: 50,
-                    gst: 43.5,
-                    total: 914,
-                    paymentMode: 'Card',
-                    timestamp: new Date(Date.now() - 1800000).toISOString()
-                }
-            ],
-            inventory: [
-                { id: 's1', name: 'Fresh Malai Paneer', qty: 8.5, unit: 'kg', min: 3 },
-                { id: 's2', name: 'Basmati Biryani Rice', qty: 24, unit: 'kg', min: 10 },
-                { id: 's3', name: 'Chicken (Fresh Dressed)', qty: 6, unit: 'kg', min: 5 },
-                { id: 's4', name: 'Desi Mutton', qty: 2.5, unit: 'kg', min: 4 },
-                { id: 's5', name: 'Amul Butter (500g Packs)', qty: 4, unit: 'packs', min: 6 },
-                { id: 's6', name: 'Refined Cooking Oil', qty: 18, unit: 'L', min: 8 }
-            ],
-            billCounter: 1004
+        const DEFAULT_TABLES = [
+            { id: 'cabin-1', name: 'Cabin 1 (Royal)', type: 'cabin', capacity: 4 },
+            { id: 'cabin-2', name: 'Cabin 2 (Family)', type: 'cabin', capacity: 6 },
+            { id: 'cabin-3', name: 'Cabin 3 (Couple)', type: 'cabin', capacity: 2 },
+            { id: 'table-1', name: 'Table 1', type: 'hall', capacity: 4 },
+            { id: 'table-2', name: 'Table 2', type: 'hall', capacity: 4 },
+            { id: 'table-3', name: 'Table 3', type: 'hall', capacity: 2 },
+            { id: 'table-4', name: 'Table 4', type: 'hall', capacity: 4 },
+            { id: 'table-5', name: 'Table 5', type: 'hall', capacity: 6 },
+            { id: 'table-6', name: 'Table 6', type: 'hall', capacity: 4 },
+            { id: 'takeaway-1', name: 'Takeaway Counter 1', type: 'takeaway', capacity: 1 },
+            { id: 'takeaway-2', name: 'Online / Parcel', type: 'takeaway', capacity: 1 }
+        ];
+
+        const DEFAULT_MENU = [
+            { id: 'm1', name: 'Paneer Tikka Angara', category: 'Starters', price: 240, veg: true, stock: 40 },
+            { id: 'm2', name: 'Crispy Chilli Baby Corn', category: 'Starters', price: 190, veg: true, stock: 35 },
+            { id: 'm3', name: 'Tandoori Chicken (Half)', category: 'Starters', price: 280, veg: false, stock: 25 },
+            { id: 'm4', name: 'Chicken Seekh Kebab', category: 'Starters', price: 260, veg: false, stock: 30 },
+            { id: 'm5', name: 'Virasat Shahi Paneer', category: 'Main Course', price: 270, veg: true, stock: 50 },
+            { id: 'm6', name: 'Dal Makhani Heritage', category: 'Main Course', price: 210, veg: true, stock: 60 },
+            { id: 'm7', name: 'Kadhai Mushroom Masala', category: 'Main Course', price: 230, veg: true, stock: 35 },
+            { id: 'm8', name: 'Ranchi Handi Chicken', category: 'Main Course', price: 340, veg: false, stock: 30 },
+            { id: 'm9', name: 'Butter Chicken Classic', category: 'Main Course', price: 320, veg: false, stock: 35 },
+            { id: 'm10', name: 'Butter Naan', category: 'Breads & Rice', price: 45, veg: true, stock: 120 },
+            { id: 'm11', name: 'Garlic Naan', category: 'Breads & Rice', price: 60, veg: true, stock: 100 },
+            { id: 'm12', name: 'Tandoori Roti', category: 'Breads & Rice', price: 25, veg: true, stock: 150 },
+            { id: 'm13', name: 'Subz Dum Biryani', category: 'Breads & Rice', price: 220, veg: true, stock: 40 },
+            { id: 'm14', name: 'Chicken Dum Biryani', category: 'Breads & Rice', price: 280, veg: false, stock: 45 },
+            { id: 'm15', name: 'Virgin Mint Mojito', category: 'Beverages', price: 110, veg: true, stock: 80 },
+            { id: 'm16', name: 'Masala Cold Drink', category: 'Beverages', price: 70, veg: true, stock: 90 },
+            { id: 'm17', name: 'Hot Gulab Jamun (2 Pcs)', category: 'Desserts', price: 80, veg: true, stock: 60 }
+        ];
+
+        const DEFAULT_SETTINGS = {
+            name: 'VIRASAT (विरासत)',
+            address: 'Main Road, Ranchi, Jharkhand',
+            phone: '+91 98765 43210',
+            gstin: '',
+            upiId: 'virasat.ranchi@okicici',
+            gstRate: 5
         };
 
-        // App State
-        let state = loadState();
-        let currentTab = 'dashboard';
-        let currentPosTableId = 'table-2';
-        let selectedCategory = 'All';
-        let dietFilter = 'all';
-        let currentGrandTotal = 0;
-        let lastViewedReceipt = null;
+        let state = {
+            tables: DEFAULT_TABLES,
+            menu: DEFAULT_MENU,
+            activeOrders: {},
+            completedBills: [],
+            invoiceCounter: 1001,
+            settings: DEFAULT_SETTINGS
+        };
 
-        // Load from LocalStorage or initialize defaults
+        let currentPosTableId = 'cabin-1';
+        let currentCategoryFilter = 'All';
+        let currentGrandTotal = 0;
+
+        // ==================== INITIALIZATION & STORAGE ====================
         function loadState() {
             try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    return JSON.parse(raw);
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state = {
+                        ...state,
+                        ...parsed,
+                        settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) }
+                    };
                 }
             } catch (e) {
                 console.error('Failed to load state:', e);
             }
-            const cloned = JSON.parse(JSON.stringify(DEFAULT_DATA));
-            saveState(cloned);
-            return cloned;
         }
 
-        function saveState(dataToSave = state) {
+        function saveState() {
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             } catch (e) {
                 console.error('Failed to save state:', e);
             }
         }
 
-        // Format currency in INR
-        function formatINR(amount, decimals = 0) {
-            const num = Number(amount) || 0;
-            return '₹' + num.toLocaleString('en-IN', {
-                minimumFractionDigits: decimals,
-                maximumFractionDigits: decimals
+        function formatINR(amount) {
+            return '₹' + Number(amount || 0).toLocaleString('en-IN', {
+                minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+                maximumFractionDigits: 2
             });
         }
 
-        // Toast Notification Helper
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const bg = type === 'success' ? 'bg-forest-800 text-white border-forest-600' :
-                       type === 'warning' ? 'bg-amber-600 text-white border-amber-500' :
-                       'bg-rose-600 text-white border-rose-500';
-            const icon = type === 'success' ? 'ph-check-circle text-gold-400' : 'ph-info text-white';
-
-            toast.className = `${bg} border px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2.5 transform transition-all duration-300 translate-x-0`;
-            toast.innerHTML = `<i class="ph ${icon} text-lg"></i><span>${message}</span>`;
+            const colors = type === 'warning'
+                ? 'bg-amber-600 text-white'
+                : 'bg-forest-800 text-white border border-gold-500/40';
+            toast.className = `${colors} px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 transition-all duration-300`;
+            toast.innerHTML = `<i class="ph ${type === 'warning' ? 'ph-warning-circle' : 'ph-check-circle'} text-base text-gold-400"></i> <span>${message}</span>`;
             container.appendChild(toast);
-
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateX(20px)';
                 setTimeout(() => toast.remove(), 300);
-            }, 2800);
+            }, 2600);
         }
 
-        // Live Clock
         function updateClock() {
             const now = new Date();
-            const el = document.getElementById('live-clock');
-            if (el) {
-                el.textContent = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) +
-                                 ' • ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            const clockEl = document.getElementById('live-clock');
+            const dateEl = document.getElementById('live-date');
+            if (clockEl) {
+                clockEl.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            }
+            if (dateEl) {
+                dateEl.textContent = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
             }
         }
 
-        // Navigation Switcher
+        // ==================== NAVIGATION & TABS ====================
         function switchTab(tabName) {
-            currentTab = tabName;
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            const target = document.getElementById(`view-${tabName}`);
+            if (target) target.classList.remove('hidden');
 
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                if (btn.dataset.tab === tabName) {
-                    btn.classList.add('bg-gold-500', 'text-forest-900', 'font-bold', 'shadow-sm');
-                    btn.classList.remove('text-forest-100', 'hover:bg-forest-600/60');
-                } else {
-                    btn.classList.remove('bg-gold-500', 'text-forest-900', 'font-bold', 'shadow-sm');
-                    btn.classList.add('text-forest-100', 'hover:bg-forest-600/60');
-                }
+            // Desktop nav styling
+            document.querySelectorAll('.nav-btn-desk').forEach(btn => {
+                btn.classList.remove('bg-forest-700', 'text-gold-400', 'shadow-sm');
+                btn.classList.add('text-forest-100');
             });
+            const activeDesk = document.getElementById(`nav-desk-${tabName}`);
+            if (activeDesk) {
+                activeDesk.classList.add('bg-forest-700', 'text-gold-400', 'shadow-sm');
+                activeDesk.classList.remove('text-forest-100');
+            }
 
-            const titles = {
-                dashboard: ['Dashboard Overview', `Live business summary for ${state.settings.name}`],
-                tables: ['Tables & Private Cabins', 'Tap any table or private cabin to manage orders or generate bills'],
-                pos: ['POS Billing & KOT', 'Fast order entry, GST calculation & multi-mode checkout'],
-                menu: ['Menu & Kitchen Inventory', 'Manage dishes, pricing, availability & raw stock alerts'],
-                reports: ['Sales Ledger & Settings', 'Daily GST reports, CSV export & restaurant configuration']
-            };
-            document.getElementById('page-title').textContent = titles[tabName][0];
-            document.getElementById('page-subtitle').textContent = titles[tabName][1];
+            // Mobile nav styling
+            document.querySelectorAll('.nav-btn-mob').forEach(btn => {
+                btn.classList.remove('text-forest-700', 'font-bold');
+                btn.classList.add('text-slate-500', 'font-medium');
+            });
+            const activeMob = document.getElementById(`nav-mob-${tabName}`);
+            if (activeMob) {
+                activeMob.classList.add('text-forest-700', 'font-bold');
+                activeMob.classList.remove('text-slate-500', 'font-medium');
+            }
 
             if (tabName === 'dashboard') renderDashboard();
-            if (tabName === 'tables') renderTablesView();
+            if (tabName === 'tables') renderTables();
             if (tabName === 'pos') renderPosView();
-            if (tabName === 'menu') { renderMenuManager(); renderInventoryManager(); }
-            if (tabName === 'reports') { renderSalesReport(); loadSettingsForm(); }
+            if (tabName === 'menu') renderMenuManagement();
+            if (tabName === 'reports') renderSalesReports();
+            if (tabName === 'settings') loadSettingsForm();
+        }
+
+        function startNewOrder() {
+            const freeTable = state.tables.find(t => !state.activeOrders[t.id] || state.activeOrders[t.id].items.length === 0);
+            currentPosTableId = freeTable ? freeTable.id : state.tables[0].id;
+            switchTab('pos');
         }
 
         // ==================== 1. DASHBOARD RENDERING ====================
         function renderDashboard() {
-            const bills = state.completedBills;
-            const totalRev = bills.reduce((sum, b) => sum + b.total, 0);
-            const avgTicket = bills.length ? Math.round(totalRev / bills.length) : 0;
+            const todayStr = new Date().toDateString();
+            const todaysBills = state.completedBills.filter(b => new Date(b.timestamp).toDateString() === todayStr);
 
-            // Active tables count (excluding takeaway)
-            const diningSpaces = state.tables.filter(t => t.type !== 'takeaway');
-            const activeSpaces = diningSpaces.filter(t => t.status !== 'available');
-
-            // Running KOT total
-            let runningTotal = 0;
-            Object.values(state.activeOrders).forEach(ord => {
-                if (ord && ord.items) {
-                    runningTotal += ord.items.reduce((s, i) => s + (i.price * i.qty), 0);
-                }
-            });
-
-            // Low stock count
-            const lowStockCount = state.inventory.filter(item => item.qty <= item.min).length;
-
-            document.getElementById('kpi-revenue').textContent = formatINR(totalRev);
-            document.getElementById('kpi-orders').textContent = bills.length;
-            document.getElementById('kpi-avg-ticket').textContent = `Avg. Order: ${formatINR(avgTicket)}`;
-            document.getElementById('kpi-active-tables').textContent = `${activeSpaces.length} / ${diningSpaces.length}`;
-            document.getElementById('kpi-running-value').textContent = `Running KOT: ${formatINR(runningTotal)}`;
-            document.getElementById('kpi-low-stock').textContent = lowStockCount;
-
-            // Payment Breakdown
-            let upi = 0, card = 0, cash = 0;
-            bills.forEach(b => {
+            let rev = 0, upi = 0, cash = 0, card = 0;
+            todaysBills.forEach(b => {
+                rev += b.total;
                 if (b.paymentMode === 'UPI') upi += b.total;
-                else if (b.paymentMode === 'Card') card += b.total;
                 else if (b.paymentMode === 'Cash') cash += b.total;
+                else card += b.total;
             });
 
-            document.getElementById('pay-upi-amt').textContent = formatINR(upi);
-            document.getElementById('pay-card-amt').textContent = formatINR(card);
-            document.getElementById('pay-cash-amt').textContent = formatINR(cash);
+            document.getElementById('kpi-revenue').textContent = formatINR(rev);
+            document.getElementById('kpi-bills').textContent = todaysBills.length;
+            document.getElementById('kpi-avg').textContent = `Avg. Order: ${formatINR(todaysBills.length ? rev / todaysBills.length : 0)}`;
+            document.getElementById('kpi-upi').textContent = formatINR(upi);
+            document.getElementById('kpi-cash').textContent = formatINR(cash);
+            document.getElementById('kpi-card').textContent = formatINR(card);
 
-            document.getElementById('pay-upi-bar').style.width = totalRev ? `${(upi / totalRev) * 100}%` : '0%';
-            document.getElementById('pay-card-bar').style.width = totalRev ? `${(card / totalRev) * 100}%` : '0%';
-            document.getElementById('pay-cash-bar').style.width = totalRev ? `${(cash / totalRev) * 100}%` : '0%';
+            const activeIds = Object.keys(state.activeOrders).filter(id => state.activeOrders[id]?.items?.length > 0);
+            let runningSum = 0;
+            activeIds.forEach(id => {
+                const sub = state.activeOrders[id].items.reduce((acc, it) => acc + it.price * it.qty, 0);
+                runningSum += sub * (1 + state.settings.gstRate / 100);
+            });
 
-            // Recent Bills Table
-            const tbody = document.getElementById('dashboard-recent-bills');
-            if (bills.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">No bills completed yet today.</td></tr>`;
-                return;
+            document.getElementById('kpi-active-tables').textContent = `${activeIds.length} / ${state.tables.length}`;
+            document.getElementById('kpi-running-total').textContent = `Running KOT: ${formatINR(runningSum)}`;
+
+            // Running tables list
+            const runContainer = document.getElementById('dash-running-list');
+            if (activeIds.length === 0) {
+                runContainer.innerHTML = `<p class="text-sm text-slate-400 text-center py-6">No active tables right now. Tap "New Bill / Order" to start.</p>`;
+            } else {
+                runContainer.innerHTML = activeIds.map(id => {
+                    const tbl = state.tables.find(t => t.id === id);
+                    const ord = state.activeOrders[id];
+                    const itemCount = ord.items.reduce((s, i) => s + i.qty, 0);
+                    const sub = ord.items.reduce((s, i) => s + i.price * i.qty, 0);
+                    return `
+                        <div onclick="openTablePos('${id}')" class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 hover:bg-amber-100/70 cursor-pointer flex items-center justify-between transition">
+                            <div>
+                                <p class="font-bold text-sm text-slate-900">${tbl ? tbl.name : id}</p>
+                                <p class="text-xs text-slate-600">${itemCount} items • ${ord.customerName || 'Walk-in Guest'}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-extrabold text-sm text-forest-800">${formatINR(sub)}</p>
+                                <span class="text-[11px] font-semibold text-amber-700">Open Bill →</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
 
-            tbody.innerHTML = [...bills].reverse().slice(0, 6).map(b => {
-                const badgeClass = b.paymentMode === 'UPI' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                   b.paymentMode === 'Card' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                   'bg-amber-50 text-amber-700 border-amber-200';
-                return `
-                    <tr class="hover:bg-slate-50/80 transition">
-                        <td class="py-3 px-3 font-mono font-bold text-slate-800">${b.billNo}</td>
-                        <td class="py-3 px-3 font-medium text-slate-700">${b.tableName}</td>
-                        <td class="py-3 px-3"><span class="px-2 py-0.5 rounded-md text-xs font-semibold border ${badgeClass}">${b.paymentMode}</span></td>
-                        <td class="py-3 px-3 text-right font-bold text-slate-900">${formatINR(b.total)}</td>
-                        <td class="py-3 px-3 text-right">
-                            <button onclick="viewReceiptByBillNo('${b.billNo}')" class="text-forest-700 hover:text-forest-900 font-semibold text-xs inline-flex items-center gap-1 bg-forest-50 px-2.5 py-1 rounded-lg">
-                                <i class="ph ph-receipt"></i> Receipt
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            // Recent settled bills
+            const recentContainer = document.getElementById('dash-recent-bills');
+            const recent = [...state.completedBills].reverse().slice(0, 5);
+            if (recent.length === 0) {
+                recentContainer.innerHTML = `<p class="text-sm text-slate-400 text-center py-6">No settled bills yet today.</p>`;
+            } else {
+                recentContainer.innerHTML = recent.map(b => `
+                    <div onclick="viewReceipt('${b.invoiceNo}')" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100 cursor-pointer flex items-center justify-between transition">
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">${b.invoiceNo} • ${b.tableName}</p>
+                            <p class="text-xs text-slate-500">${new Date(b.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} • Paid via ${b.paymentMode}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-extrabold text-sm text-emerald-700">${formatINR(b.total)}</p>
+                            <span class="text-[11px] font-semibold text-forest-700">Receipt</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
         }
 
         // ==================== 2. TABLES & CABINS RENDERING ====================
-        function renderTablesView() {
-            const cabins = state.tables.filter(t => t.type === 'cabin');
-            const tables = state.tables.filter(t => t.type === 'table');
+        function renderTables() {
+            const renderCard = (t) => {
+                const ord = state.activeOrders[t.id];
+                const isOccupied = ord && ord.items && ord.items.length > 0;
+                const sub = isOccupied ? ord.items.reduce((s, i) => s + i.price * i.qty, 0) : 0;
+                const count = isOccupied ? ord.items.reduce((s, i) => s + i.qty, 0) : 0;
 
-            document.getElementById('cabins-grid').innerHTML = cabins.map(c => buildSpaceCard(c, true)).join('');
-            document.getElementById('tables-grid').innerHTML = tables.map(t => buildSpaceCard(t, false)).join('');
-        }
-
-        function buildSpaceCard(space, isCabin) {
-            const order = state.activeOrders[space.id];
-            const itemCount = order ? order.items.reduce((s, i) => s + i.qty, 0) : 0;
-            const orderTotal = order ? order.items.reduce((s, i) => s + (i.price * i.qty), 0) : 0;
-
-            let cardStyle = 'bg-white border-emerald-200 hover:border-emerald-500';
-            let badgeStyle = 'bg-emerald-100 text-emerald-800';
-            let statusLabel = 'Available';
-
-            if (space.status === 'occupied') {
-                cardStyle = 'bg-amber-50/60 border-amber-300 hover:border-amber-500';
-                badgeStyle = 'bg-amber-100 text-amber-800';
-                statusLabel = 'Occupied';
-            } else if (space.status === 'billing') {
-                cardStyle = 'bg-blue-50/60 border-blue-300 hover:border-blue-500';
-                badgeStyle = 'bg-blue-100 text-blue-800';
-                statusLabel = 'Ready to Bill';
-            }
-
-            return `
-                <div onclick="openTableInPos('${space.id}')" class="cursor-pointer rounded-2xl border-2 p-5 transition-all shadow-sm hover:shadow-md flex flex-col justify-between min-h-[145px] ${cardStyle}">
-                    <div class="flex items-start justify-between gap-2">
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                ${isCabin ? '<i class="ph-fill ph-crown text-gold-500 text-lg"></i>' : '<i class="ph ph-armchair text-slate-500 text-lg"></i>'}
-                                <h4 class="font-bold text-slate-900 text-base sm:text-lg">${space.name}</h4>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-0.5">${space.capacity} Seater ${isCabin ? '• Private' : ''}</p>
+                return `
+                    <div onclick="openTablePos('${t.id}')" class="p-4 rounded-2xl border-2 cursor-pointer transition shadow-xs ${
+                        isOccupied
+                            ? 'bg-amber-50 border-amber-400 hover:border-amber-500'
+                            : 'bg-white border-slate-200 hover:border-forest-600'
+                    }">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                isOccupied ? 'bg-amber-200 text-amber-900' : 'bg-emerald-100 text-emerald-800'
+                            }">
+                                ${isOccupied ? 'Occupied' : 'Available'}
+                            </span>
+                            <span class="text-xs text-slate-400 font-medium">${t.capacity} Pax</span>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeStyle}">${statusLabel}</span>
+                        <h4 class="font-bold text-slate-900 text-sm">${t.name}</h4>
+                        <p class="text-xs mt-1 ${isOccupied ? 'font-bold text-forest-800' : 'text-slate-400'}">
+                            ${isOccupied ? `${count} items • ${formatINR(sub)}` : 'Tap to start order'}
+                        </p>
                     </div>
+                `;
+            };
 
-                    <div class="mt-4 pt-3 border-t border-slate-200/70 flex items-center justify-between">
-                        ${itemCount > 0 ? `
-                            <div>
-                                <p class="text-xs text-slate-500">${itemCount} items</p>
-                                <p class="text-base font-extrabold text-slate-900">${formatINR(orderTotal)}</p>
-                            </div>
-                            <span class="w-8 h-8 rounded-xl bg-forest-700 text-white flex items-center justify-center"><i class="ph ph-arrow-right"></i></span>
-                        ` : `
-                            <span class="text-xs font-medium text-emerald-700">Tap to start order</span>
-                            <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="ph ph-plus"></i></span>
-                        `}
-                    </div>
-                </div>
-            `;
+            document.getElementById('grid-cabins').innerHTML = state.tables.filter(t => t.type === 'cabin').map(renderCard).join('');
+            document.getElementById('grid-hall').innerHTML = state.tables.filter(t => t.type === 'hall').map(renderCard).join('');
+            document.getElementById('grid-takeaway').innerHTML = state.tables.filter(t => t.type === 'takeaway').map(renderCard).join('');
         }
 
-        function openTableInPos(tableId) {
+        function openTablePos(tableId) {
             currentPosTableId = tableId;
             switchTab('pos');
         }
 
-        function startQuickTakeaway() {
-            currentPosTableId = 'takeaway';
-            switchTab('pos');
-        }
-
-        // ==================== 3. POS BILLING & ORDER TAKING ====================
-        function renderPosView() {
-            // Populate table dropdown
-            const select = document.getElementById('pos-table-select');
-            select.innerHTML = state.tables.map(t => {
-                const hasItems = state.activeOrders[t.id] && state.activeOrders[t.id].items.length > 0;
-                return `<option value="${t.id}" ${t.id === currentPosTableId ? 'selected' : ''}>${t.name} ${hasItems ? '(Active)' : ''}</option>`;
-            }).join('');
-
-            // Ensure order object exists in working memory
-            if (!state.activeOrders[currentPosTableId]) {
-                state.activeOrders[currentPosTableId] = {
-                    tableId: currentPosTableId,
-                    customer: '',
+        // ==================== 3. POS BILLING LOGIC ====================
+        function ensureActiveOrder(tableId) {
+            if (!state.activeOrders[tableId]) {
+                state.activeOrders[tableId] = {
                     items: [],
-                    discountVal: 0,
-                    discountType: 'flat',
-                    gstEnabled: true
+                    discountPct: 0,
+                    customerName: '',
+                    customerPhone: ''
                 };
             }
-
-            const order = state.activeOrders[currentPosTableId];
-            document.getElementById('pos-customer-name').value = order.customer || '';
-            document.getElementById('pos-discount-val').value = order.discountVal || 0;
-            document.getElementById('pos-discount-type').value = order.discountType || 'flat';
-            document.getElementById('pos-gst-toggle').checked = order.gstEnabled !== false;
-
-            const tableObj = state.tables.find(t => t.id === currentPosTableId);
-            const badge = document.getElementById('pos-order-status-badge');
-            if (tableObj && tableObj.status === 'occupied') {
-                badge.textContent = 'Occupied • KOT Sent';
-            } else if (tableObj && tableObj.status === 'billing') {
-                badge.textContent = 'Ready to Bill';
-            } else {
-                badge.textContent = 'New Order';
-            }
-
-            renderPosCategories();
-            renderPosMenu();
-            renderPosCart();
+            return state.activeOrders[tableId];
         }
 
-        function onPosTableChange(newTableId) {
-            currentPosTableId = newTableId;
+        function renderPosView() {
+            const select = document.getElementById('pos-table-select');
+            select.innerHTML = state.tables.map(t => {
+                const hasItems = state.activeOrders[t.id]?.items?.length > 0;
+                return `<option value="${t.id}" ${t.id === currentPosTableId ? 'selected' : ''}>${t.name}${hasItems ? ' (Active)' : ''}</option>`;
+            }).join('');
+
+            const categories = ['All', ...new Set(state.menu.map(m => m.category))];
+            document.getElementById('pos-categories').innerHTML = categories.map(cat => `
+                <button onclick="setPosCategory('${cat}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                    currentCategoryFilter === cat
+                        ? 'bg-forest-700 text-white shadow-xs'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }">
+                    ${cat}
+                </button>
+            `).join('');
+
+            renderPosMenu();
+            renderCart();
+        }
+
+        function setPosCategory(cat) {
+            currentCategoryFilter = cat;
             renderPosView();
         }
 
-        function syncCustomerInfo() {
-            if (state.activeOrders[currentPosTableId]) {
-                state.activeOrders[currentPosTableId].customer = document.getElementById('pos-customer-name').value;
-                saveState();
-            }
-        }
-
-        function renderPosCategories() {
-            const categories = ['All', 'Starters', 'Main Course', 'Breads & Rice', 'Beverages', 'Desserts'];
-            document.getElementById('pos-categories').innerHTML = categories.map(cat => {
-                const active = selectedCategory === cat;
-                return `
-                    <button onclick="selectCategory('${cat}')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition ${active ? 'bg-forest-700 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:border-forest-700'}">
-                        ${cat}
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function selectCategory(cat) {
-            selectedCategory = cat;
-            renderPosCategories();
-            renderPosMenu();
-        }
-
-        function setDietFilter(filter) {
-            dietFilter = filter;
-            document.querySelectorAll('.diet-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
-                btn.classList.add('text-slate-600');
-            });
-            const activeBtn = document.getElementById(`diet-${filter}`);
-            activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
-            activeBtn.classList.remove('text-slate-600');
-            renderPosMenu();
+        function changePosTable(tableId) {
+            currentPosTableId = tableId;
+            renderCart();
         }
 
         function renderPosMenu() {
-            const query = document.getElementById('pos-search').value.toLowerCase().trim();
+            const query = (document.getElementById('pos-search').value || '').toLowerCase().trim();
             const filtered = state.menu.filter(item => {
-                if (!item.available) return false;
-                if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
-                if (dietFilter === 'veg' && !item.isVeg) return false;
-                if (dietFilter === 'nonveg' && item.isVeg) return false;
-                if (query && !item.name.toLowerCase().includes(query)) return false;
-                return true;
+                const matchCat = currentCategoryFilter === 'All' || item.category === currentCategoryFilter;
+                const matchSearch = item.name.toLowerCase().includes(query) || item.category.toLowerCase().includes(query);
+                return matchCat && matchSearch;
             });
 
             const grid = document.getElementById('pos-menu-grid');
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 text-sm">No available dishes match your filter.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400 text-xs">No dishes found matching your search.</div>`;
                 return;
             }
 
-            grid.innerHTML = filtered.map(item => `
-                <button onclick="addItemToCart('${item.id}')" class="text-left bg-white hover:bg-forest-50/60 border border-slate-200 hover:border-forest-700 p-3.5 rounded-2xl transition shadow-sm flex flex-col justify-between group active:scale-[0.98]">
-                    <div>
-                        <div class="flex items-center justify-between gap-2 mb-1.5">
-                            <span class="w-3.5 h-3.5 rounded-sm border ${item.isVeg ? 'border-emerald-600' : 'border-rose-600'} flex items-center justify-center shrink-0">
-                                <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-600' : 'bg-rose-600'}"></span>
-                            </span>
-                            <span class="text-[11px] font-medium text-slate-400">${item.category}</span>
+            grid.innerHTML = filtered.map(item => {
+                const outOfStock = item.stock <= 0;
+                return `
+                    <div onclick="${outOfStock ? '' : `addToCart('${item.id}')`}" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs transition flex flex-col justify-between ${
+                        outOfStock ? 'opacity-50 cursor-not-allowed' : 'hover:border-forest-600 active:scale-[0.98] cursor-pointer'
+                    }">
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="w-3.5 h-3.5 rounded-xs border flex items-center justify-center ${
+                                    item.veg ? 'border-emerald-600' : 'border-red-600'
+                                }">
+                                    <span class="w-1.5 h-1.5 rounded-full ${item.veg ? 'bg-emerald-600' : 'bg-red-600'}"></span>
+                                </span>
+                                <span class="text-[10px] font-medium text-slate-400">${outOfStock ? 'Out of Stock' : `Stock: ${item.stock}`}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-xs leading-snug line-clamp-2">${item.name}</h4>
                         </div>
-                        <h4 class="font-bold text-slate-800 text-sm leading-snug group-hover:text-forest-800">${item.name}</h4>
+                        <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span class="font-extrabold text-forest-800 text-sm">${formatINR(item.price)}</span>
+                            <span class="w-6 h-6 rounded-lg bg-forest-50 text-forest-700 flex items-center justify-center font-bold text-sm">+</span>
+                        </div>
                     </div>
-                    <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <span class="font-extrabold text-forest-700 text-sm">${formatINR(item.price)}</span>
-                        <span class="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-forest-700 group-hover:text-white text-slate-700 flex items-center justify-center transition">
-                            <i class="ph ph-plus font-bold"></i>
-                        </span>
-                    </div>
-                </button>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        function addItemToCart(menuId) {
+        function addToCart(menuId) {
             const dish = state.menu.find(m => m.id === menuId);
-            if (!dish) return;
+            if (!dish || dish.stock <= 0) return;
 
-            const order = state.activeOrders[currentPosTableId];
+            const order = ensureActiveOrder(currentPosTableId);
             const existing = order.items.find(i => i.id === menuId);
             if (existing) {
+                if (existing.qty >= dish.stock) {
+                    showToast(`Only ${dish.stock} available in stock`, 'warning');
+                    return;
+                }
                 existing.qty += 1;
             } else {
                 order.items.push({
                     id: dish.id,
                     name: dish.name,
                     price: dish.price,
-                    qty: 1,
-                    isVeg: dish.isVeg
+                    qty: 1
                 });
             }
-
-            // Automatically mark table occupied if it was available
-            const tableObj = state.tables.find(t => t.id === currentPosTableId);
-            if (tableObj && tableObj.status === 'available' && tableObj.type !== 'takeaway') {
-                tableObj.status = 'occupied';
-            }
-
             saveState();
-            renderPosCart();
+            renderCart();
         }
 
         function updateCartQty(menuId, delta) {
-            const order = state.activeOrders[currentPosTableId];
+            const order = ensureActiveOrder(currentPosTableId);
             const idx = order.items.findIndex(i => i.id === menuId);
             if (idx === -1) return;
 
-            order.items[idx].qty += delta;
-            if (order.items[idx].qty <= 0) {
-                order.items.splice(idx, 1);
-            }
+            const dish = state.menu.find(m => m.id === menuId);
+            const nextQty = order.items[idx].qty + delta;
 
+            if (nextQty <= 0) {
+                order.items.splice(idx, 1);
+            } else if (dish && nextQty > dish.stock) {
+                showToast(`Maximum stock (${dish.stock}) reached`, 'warning');
+                return;
+            } else {
+                order.items[idx].qty = nextQty;
+            }
             saveState();
-            renderPosCart();
+            renderCart();
         }
 
-        function renderPosCart() {
-            const order = state.activeOrders[currentPosTableId];
-            const container = document.getElementById('pos-cart-items');
+        function updateOrderCustomer() {
+            const order = ensureActiveOrder(currentPosTableId);
+            order.customerName = document.getElementById('cart-cust-name').value.trim();
+            order.customerPhone = document.getElementById('cart-cust-phone').value.trim();
+            saveState();
+        }
 
-            if (!order || order.items.length === 0) {
+        function clearCurrentCart() {
+            if (!state.activeOrders[currentPosTableId] || state.activeOrders[currentPosTableId].items.length === 0) return;
+            delete state.activeOrders[currentPosTableId];
+            saveState();
+            renderCart();
+            showToast('Order cleared');
+        }
+
+        function renderCart() {
+            const tbl = state.tables.find(t => t.id === currentPosTableId);
+            document.getElementById('cart-table-title').textContent = tbl ? tbl.name : currentPosTableId;
+
+            const order = ensureActiveOrder(currentPosTableId);
+            document.getElementById('cart-cust-name').value = order.customerName || '';
+            document.getElementById('cart-cust-phone').value = order.customerPhone || '';
+            document.getElementById('cart-discount-pct').value = order.discountPct || 0;
+
+            const container = document.getElementById('cart-items-list');
+            if (order.items.length === 0) {
                 container.innerHTML = `
-                    <div class="py-12 text-center text-slate-400 flex flex-col items-center">
-                        <i class="ph ph-shopping-bag-open text-4xl mb-2 text-slate-300"></i>
-                        <p class="text-sm font-medium">No items added yet</p>
-                        <p class="text-xs mt-0.5">Tap dishes on the left to start billing</p>
+                    <div class="text-center py-10 text-slate-400">
+                        <i class="ph ph-shopping-cart text-3xl mb-1"></i>
+                        <p class="text-xs">Tap dishes on the left to add to bill</p>
                     </div>
                 `;
-                recalculateCart();
-                return;
-            }
-
-            container.innerHTML = order.items.map(item => `
-                <div class="pt-2.5 first:pt-0 flex items-center justify-between gap-2">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2.5 h-2.5 rounded-sm border ${item.isVeg ? 'border-emerald-600' : 'border-rose-600'} flex items-center justify-center shrink-0">
-                                <span class="w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-emerald-600' : 'bg-rose-600'}"></span>
-                            </span>
-                            <p class="font-semibold text-slate-800 text-sm truncate">${item.name}</p>
+            } else {
+                container.innerHTML = order.items.map(item => `
+                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold text-xs text-slate-800 truncate">${item.name}</p>
+                            <p class="text-[11px] text-slate-500">${formatINR(item.price)} × ${item.qty}</p>
                         </div>
-                        <p class="text-xs text-slate-500 pl-4">${formatINR(item.price)} × ${item.qty} = <strong class="text-slate-700">${formatINR(item.price * item.qty)}</strong></p>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-white border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100">-</button>
+                            <span class="w-5 text-center text-xs font-bold">${item.qty}</span>
+                            <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-forest-700 text-white font-bold text-xs hover:bg-forest-800">+</button>
+                        </div>
+                        <div class="w-14 text-right font-extrabold text-xs text-slate-900">
+                            ${formatINR(item.price * item.qty)}
+                        </div>
                     </div>
-                    <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl shrink-0">
-                        <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-bold flex items-center justify-center shadow-sm">
-                            <i class="ph ph-minus"></i>
-                        </button>
-                        <span class="w-6 text-center text-xs font-bold text-slate-900">${item.qty}</span>
-                        <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 font-bold flex items-center justify-center shadow-sm">
-                            <i class="ph ph-plus"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+            }
 
             recalculateCart();
         }
 
         function recalculateCart() {
-            const order = state.activeOrders[currentPosTableId];
-            if (!order) return;
+            const order = ensureActiveOrder(currentPosTableId);
+            const discPct = Math.max(0, Math.min(100, parseFloat(document.getElementById('cart-discount-pct').value) || 0));
+            order.discountPct = discPct;
 
-            const subtotal = order.items.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const discVal = parseFloat(document.getElementById('pos-discount-val').value) || 0;
-            const discType = document.getElementById('pos-discount-type').value;
-            const gstEnabled = document.getElementById('pos-gst-toggle').checked;
+            const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const discountAmt = subtotal * (discPct / 100);
+            const taxable = Math.max(0, subtotal - discountAmt);
+            const gstRate = parseFloat(state.settings.gstRate) || 0;
+            const gstAmt = taxable * (gstRate / 100);
+            currentGrandTotal = Math.round(taxable + gstAmt);
 
-            order.discountVal = discVal;
-            order.discountType = discType;
-            order.gstEnabled = gstEnabled;
+            document.getElementById('cart-subtotal').textContent = formatINR(subtotal);
+            document.getElementById('cart-discount-amt').textContent = `-${formatINR(discountAmt)}`;
+            document.getElementById('cart-gst-label').textContent = `GST (${gstRate}%)`;
+            document.getElementById('cart-gst-amt').textContent = formatINR(gstAmt);
+            document.getElementById('cart-grand-total').textContent = formatINR(currentGrandTotal);
             saveState();
-
-            let discountAmt = discType === 'percent' ? (subtotal * discVal) / 100 : discVal;
-            if (discountAmt > subtotal) discountAmt = subtotal;
-
-            const taxable = subtotal - discountAmt;
-            const gstAmt = gstEnabled ? taxable * 0.05 : 0;
-            const grandTotal = Math.round(taxable + gstAmt);
-            currentGrandTotal = grandTotal;
-
-            document.getElementById('bill-subtotal').textContent = formatINR(subtotal, 2);
-
-            const discRow = document.getElementById('bill-discount-row');
-            if (discountAmt > 0) {
-                discRow.classList.remove('hidden');
-                document.getElementById('bill-discount').textContent = '-' + formatINR(discountAmt, 2);
-            } else {
-                discRow.classList.add('hidden');
-            }
-
-            const gstRow = document.getElementById('bill-gst-row');
-            if (gstEnabled) {
-                gstRow.classList.remove('hidden');
-                document.getElementById('bill-gst').textContent = formatINR(gstAmt, 2);
-            } else {
-                gstRow.classList.add('hidden');
-            }
-
-            document.getElementById('bill-grand-total').textContent = formatINR(grandTotal);
         }
 
-        function saveKotOrder() {
+        function saveKotToast() {
             const order = state.activeOrders[currentPosTableId];
             if (!order || order.items.length === 0) {
-                showToast('Add at least one item before sending KOT.', 'warning');
+                showToast('Add items before saving KOT', 'warning');
                 return;
-            }
-            const tableObj = state.tables.find(t => t.id === currentPosTableId);
-            if (tableObj && tableObj.type !== 'takeaway') {
-                tableObj.status = 'occupied';
             }
             saveState();
-            renderPosView();
-            showToast(`KOT saved & sent to kitchen for ${tableObj.name}!`);
-        }
-
-        function markTableReadyToBill() {
-            const order = state.activeOrders[currentPosTableId];
-            if (!order || order.items.length === 0) {
-                showToast('No active items on this table.', 'warning');
-                return;
-            }
-            const tableObj = state.tables.find(t => t.id === currentPosTableId);
-            if (tableObj && tableObj.type !== 'takeaway') {
-                tableObj.status = 'billing';
-                saveState();
-                renderPosView();
-                showToast(`${tableObj.name} marked as Ready to Bill.`);
-            }
-        }
-
-        function clearCurrentOrder() {
-            const order = state.activeOrders[currentPosTableId];
-            if (!order || order.items.length === 0) return;
-
-            openConfirmModal(
-                'Clear Current Order?',
-                'This will remove all items from this table and mark it available.',
-                () => {
-                    delete state.activeOrders[currentPosTableId];
-                    const tableObj = state.tables.find(t => t.id === currentPosTableId);
-                    if (tableObj) tableObj.status = 'available';
-                    saveState();
-                    renderPosView();
-                    showToast('Order cleared.');
-                }
-            );
+            showToast('KOT saved to active table!');
         }
 
         // ==================== 4. PAYMENT ACCEPTANCE & RECEIPT ====================
@@ -1613,11 +1218,9 @@
             document.getElementById('pay-modal-table').textContent = tableObj ? tableObj.name : 'Order';
             document.getElementById('pay-modal-amount').textContent = formatINR(currentGrandTotal);
 
-            // Reset cash inputs
             document.getElementById('cash-tendered-input').value = currentGrandTotal;
             calculateCashChange();
 
-            // Generate dynamic UPI QR Code
             generateUpiQrCode(currentGrandTotal);
 
             selectPaymentMode('UPI');
@@ -1650,15 +1253,296 @@
             const upiId = state.settings.upiId || 'virasat.ranchi@okicici';
             const payeeName = encodeURIComponent(state.settings.name || 'VIRASAT');
             const upiUri = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount.toFixed(2)}&cu=INR`;
-// ... existing code ... -->
+
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: upiUri,
+                    width: 170,
+                    height: 170,
+                    colorDark: '#0d2219',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } else {
+                qrContainer.innerHTML = `<p class="text-xs font-bold p-4">UPI ID: ${upiId}</p>`;
+            }
+        }
+
+        function calculateCashChange() {
+            const tendered = parseFloat(document.getElementById('cash-tendered-input').value) || 0;
+            const change = Math.max(0, tendered - currentGrandTotal);
+            document.getElementById('cash-change-display').textContent = formatINR(change);
+        }
+
+        function completePayment(mode) {
+            const order = state.activeOrders[currentPosTableId];
+            if (!order || order.items.length === 0) return;
+
+            const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const discountAmt = subtotal * ((order.discountPct || 0) / 100);
+            const taxable = Math.max(0, subtotal - discountAmt);
+            const gstRate = parseFloat(state.settings.gstRate) || 0;
+            const gstAmt = taxable * (gstRate / 100);
+            const total = Math.round(taxable + gstAmt);
+
+            // Deduct stock
+            order.items.forEach(cartItem => {
+                const dish = state.menu.find(m => m.id === cartItem.id);
+                if (dish) {
+                    dish.stock = Math.max(0, dish.stock - cartItem.qty);
+                }
+            });
+
+            const tbl = state.tables.find(t => t.id === currentPosTableId);
+            const invoiceNo = `INV-${state.invoiceCounter++}`;
+
+            const billRecord = {
+                invoiceNo,
+                timestamp: new Date().toISOString(),
+                tableId: currentPosTableId,
+                tableName: tbl ? tbl.name : currentPosTableId,
+                customerName: order.customerName || '',
+                customerPhone: order.customerPhone || '',
+                items: JSON.parse(JSON.stringify(order.items)),
+                subtotal,
+                discountAmt,
+                gstRate,
+                gstAmt,
+                total,
+                paymentMode: mode
+            };
+
+            state.completedBills.push(billRecord);
+            delete state.activeOrders[currentPosTableId];
+            saveState();
+
+            closePaymentModal();
+            renderPosView();
+            showToast(`Bill ${invoiceNo} settled (${mode})!`);
+            viewReceipt(invoiceNo);
+        }
+
+        function viewReceipt(invoiceNo) {
+            const bill = state.completedBills.find(b => b.invoiceNo === invoiceNo);
+            if (!bill) return;
+
+            document.getElementById('rec-rest-name').textContent = state.settings.name;
+            document.getElementById('rec-rest-address').textContent = state.settings.address;
+            document.getElementById('rec-rest-phone').textContent = `Ph: ${state.settings.phone}`;
+            document.getElementById('rec-rest-gstin').textContent = state.settings.gstin ? `GSTIN: ${state.settings.gstin}` : '';
+
+            document.getElementById('rec-inv-no').textContent = bill.invoiceNo;
+            document.getElementById('rec-table').textContent = bill.tableName;
+            document.getElementById('rec-date').textContent = new Date(bill.timestamp).toLocaleString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            document.getElementById('rec-pay-mode').textContent = bill.paymentMode;
+
+            const guestRow = document.getElementById('rec-guest-row');
+            if (bill.customerName) {
+                guestRow.classList.remove('hidden');
+                document.getElementById('rec-guest-name').textContent = `${bill.customerName}${bill.customerPhone ? ' (' + bill.customerPhone + ')' : ''}`;
+            } else {
+                guestRow.classList.add('hidden');
+            }
+
+            document.getElementById('rec-items-body').innerHTML = bill.items.map(i => `
+                <tr>
+                    <td class="py-1 pr-2">${i.name}</td>
+                    <td class="py-1 text-center">${i.qty}</td>
+                    <td class="py-1 text-right">${formatINR(i.price * i.qty)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('rec-subtotal').textContent = formatINR(bill.subtotal);
+            const discRow = document.getElementById('rec-disc-row');
+            if (bill.discountAmt > 0) {
+                discRow.classList.remove('hidden');
+                document.getElementById('rec-discount').textContent = `-${formatINR(bill.discountAmt)}`;
+            } else {
+                discRow.classList.add('hidden');
+            }
+            document.getElementById('rec-gst-label').textContent = `GST (${bill.gstRate}%)`;
+            document.getElementById('rec-gst').textContent = formatINR(bill.gstAmt);
+            document.getElementById('rec-total').textContent = formatINR(bill.total);
+
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+        // ==================== 5. MENU & INVENTORY MANAGEMENT ====================
+        function renderMenuManagement() {
+            const tbody = document.getElementById('menu-table-body');
+            tbody.innerHTML = state.menu.map(item => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-4 font-bold text-slate-800">${item.name}</td>
+                    <td class="py-3 px-4 text-xs text-slate-600">${item.category}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.veg ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}">
+                            ${item.veg ? 'Veg' : 'Non-Veg'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 font-bold text-forest-800">${formatINR(item.price)}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="adjustStock('${item.id}', -5)" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-xs font-bold">-5</button>
+                            <span class="font-bold text-xs w-8 text-center">${item.stock}</span>
+                            <button onclick="adjustStock('${item.id}', 10)" class="px-2 py-0.5 rounded bg-forest-50 text-forest-700 hover:bg-forest-100 text-xs font-bold">+10</button>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="deleteDish('${item.id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold">
+                            <i class="ph ph-trash text-base"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function adjustStock(menuId, delta) {
+            const dish = state.menu.find(m => m.id === menuId);
+            if (!dish) return;
+            dish.stock = Math.max(0, dish.stock + delta);
+            saveState();
+            renderMenuManagement();
+        }
+
+        function deleteDish(menuId) {
+            state.menu = state.menu.filter(m => m.id !== menuId);
+            saveState();
+            renderMenuManagement();
+            showToast('Dish removed from menu');
+        }
+
+        function openAddDishModal() {
+            document.getElementById('add-dish-modal').classList.remove('hidden');
+        }
+
+        function closeAddDishModal() {
+            document.getElementById('add-dish-modal').classList.add('hidden');
+        }
+
+        function saveNewDish(e) {
+            e.preventDefault();
+            const name = document.getElementById('dish-name').value.trim();
+            const category = document.getElementById('dish-category').value;
+            const veg = document.getElementById('dish-veg').value === 'true';
+            const price = parseFloat(document.getElementById('dish-price').value) || 0;
+            const stock = parseInt(document.getElementById('dish-stock').value, 10) || 0;
+
+            if (!name || price <= 0) return;
+
+            state.menu.unshift({
+                id: 'm-' + Date.now(),
+                name,
+                category,
+                price,
+                veg,
+                stock
+            });
+            saveState();
+            closeAddDishModal();
+            e.target.reset();
+            renderMenuManagement();
+            showToast(`${name} added to menu!`);
+        }
+
+        // ==================== 6. SALES REPORTS & CSV EXPORT ====================
+        function renderSalesReports() {
+            const tbody = document.getElementById('sales-table-body');
+            const bills = [...state.completedBills].reverse();
+
+            if (bills.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400 text-xs">No completed bills recorded yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = bills.map(b => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-4 font-bold text-slate-900">${b.invoiceNo}</td>
+                    <td class="py-3 px-4 text-xs text-slate-600">${new Date(b.timestamp).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td class="py-3 px-4 text-xs font-medium">${b.tableName}${b.customerName ? ` (${b.customerName})` : ''}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-slate-100 text-xs font-bold">${b.paymentMode}</span></td>
+                    <td class="py-3 px-4 font-extrabold text-forest-800">${formatINR(b.total)}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="viewReceipt('${b.invoiceNo}')" class="px-2.5 py-1 rounded-lg bg-forest-50 text-forest-700 hover:bg-forest-100 text-xs font-bold">
+                            View / Print
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function exportSalesCsv() {
+            if (state.completedBills.length === 0) {
+                showToast('No sales data to export yet', 'warning');
+                return;
+            }
+            const headers = ['Invoice No', 'Date', 'Table', 'Guest', 'Payment Mode', 'Subtotal', 'Discount', 'GST', 'Grand Total'];
+            const rows = state.completedBills.map(b => [
+                b.invoiceNo,
+                `"${new Date(b.timestamp).toLocaleString('en-IN')}"`,
+                `"${b.tableName}"`,
+                `"${b.customerName || 'Walk-in'}"`,
+                b.paymentMode,
+                b.subtotal.toFixed(2),
+                b.discountAmt.toFixed(2),
+                b.gstAmt.toFixed(2),
+                b.total.toFixed(2)
+            ]);
+
             const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `virasat_sales_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute('download', `virasat_sales_${new Date().toISOString().slice(0, 10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             showToast('CSV sales report downloaded!');
         }
-// ... existing code ... -->
+
+        // ==================== 7. SETTINGS ====================
+        function loadSettingsForm() {
+            document.getElementById('set-name').value = state.settings.name || '';
+            document.getElementById('set-address').value = state.settings.address || '';
+            document.getElementById('set-phone').value = state.settings.phone || '';
+            document.getElementById('set-gstin').value = state.settings.gstin || '';
+            document.getElementById('set-upi').value = state.settings.upiId || '';
+            document.getElementById('set-gst-rate').value = state.settings.gstRate ?? 5;
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            state.settings = {
+                name: document.getElementById('set-name').value.trim(),
+                address: document.getElementById('set-address').value.trim(),
+                phone: document.getElementById('set-phone').value.trim(),
+                gstin: document.getElementById('set-gstin').value.trim(),
+                upiId: document.getElementById('set-upi').value.trim(),
+                gstRate: parseFloat(document.getElementById('set-gst-rate').value) || 0
+            };
+            saveState();
+            showToast('Restaurant settings saved!');
+        }
+
+        function resetDemoData() {
+            state.menu = JSON.parse(JSON.stringify(DEFAULT_MENU));
+            state.tables = JSON.parse(JSON.stringify(DEFAULT_TABLES));
+            saveState();
+            showToast('Default VIRASAT menu restored!');
+        }
+
+        // Boot App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            updateClock();
+            setInterval(updateClock, 15000);
+            renderDashboard();
+        });
+    </script>
+</body>
+</html>
