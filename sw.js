@@ -1,4 +1,4 @@
-const CACHE_NAME = 'virasat-pos-v1';
+const CACHE_NAME = 'virasat-pos-v2';
 const ASSETS = [
   '/virasat-pos/',
   '/virasat-pos/index.html',
